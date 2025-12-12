@@ -164,6 +164,9 @@ button{ font-family: inherit; }
   max-height: 80vh;
   overflow-y: auto;
   overflow-x: hidden;
+  /* Hide scrollbars cross-browser while allowing scroll */
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none; /* Firefox */
   background: rgba(10,14,24,.9);
   border: 1px solid rgba(255,255,255,.12);
   border-radius: 14px;
@@ -178,6 +181,7 @@ button{ font-family: inherit; }
   transition: opacity .2s ease, transform .2s ease;
   z-index: 4000; /* above header and content */
 }
+.musicDropdown::-webkit-scrollbar{ display:none; }
 .musicDropdown::before{
   content: '';
   position: absolute;
