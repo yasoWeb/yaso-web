@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b0f1a" />
+  <title>For Yasmeen ✦</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#070a12; --ink:rgba(255,255,255,.92); --muted:rgba(255,255,255,.66);
+      --rose:#ff4fd8; --mint:#5bffd6; --violet:#8a5bff; --gold:#ffd37a;
+    }
+    *{ box-sizing:border-box; }
+    body{ margin:0; background:var(--bg); color:var(--ink); font-family:"Space Grotesk", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    .bg{ position:fixed; inset:0; z-index:-1; }
+    .aurora{ position:absolute; width:70vmax; height:70vmax; filter:blur(40px); opacity:.55; border-radius:50%; animation: drift 20s ease-in-out infinite; }
+    .a1{ left:-15vmax; top:-18vmax; background: radial-gradient(circle at 30% 30%, var(--violet), transparent 60%); }
+    .a2{ right:-18vmax; top:-10vmax; background: radial-gradient(circle at 60% 40%, var(--rose), transparent 62%); animation-duration:22s; }
+    .grain{ position:absolute; inset:-50%; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)' opacity='.25'/%3E%3C/svg%3E"); opacity:.13; transform:rotate(8deg); }
+    @keyframes drift{ 0%,100%{ transform: translate(0,0) scale(1); } 50%{ transform: translate(3vmax, -2vmax) scale(1.05); } }
+
+    .wrap{ min-height:100vh; display:grid; place-items:center; padding: 40px 20px; }
+    .card{ max-width:900px; width:100%; background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04)); border:1px solid rgba(255,255,255,.12); border-radius:22px; backdrop-filter: blur(14px); box-shadow: 0 20px 60px rgba(0,0,0,.55); padding: 28px; }
+    .title{ font-family:"Playfair Display", serif; font-size: clamp(28px, 4vw, 52px); margin:0 0 8px; }
+    .phrase{ font-size: clamp(18px, 2.6vw, 26px); line-height:1.85; color:var(--muted); margin: 0 0 18px; }
+    .meta{ color: rgba(255,255,255,.60); font-size:.95rem; }
+    .btns{ display:flex; gap:12px; flex-wrap:wrap; margin-top:20px; }
+    .btn{ cursor:pointer; border-radius:16px; padding: 12px 16px; border:1px solid rgba(255,255,255,.14); background: rgba(255,255,255,.05); color:var(--ink); }
+    .btn--primary{ background: linear-gradient(135deg, rgba(91,255,214,.18), rgba(255,79,216,.16), rgba(138,91,255,.16)); }
+  </style>
+</head>
+<body>
+  <div class="bg">
+    <div class="aurora a1"></div>
+    <div class="aurora a2"></div>
+    <div class="grain"></div>
+  </div>
+  <main class="wrap">
+    <article class="card">
+      <h1 class="title">For Yasmeen ✦</h1>
+      <p class="phrase" id="phrase"></p>
+      <div class="btns">
+        <a class="btn btn--primary" href="./index.html">Back to the Garden</a>
+        <button class="btn" id="copy">Copy Phrase</button>
+      </div>
+      <p class="meta" id="meta"></p>
+    </article>
+  </main>
+  <script>
+    const PHRASES = [
+      "Yasmeen, your elegance turns moments into constellations.",
+      "In a quieter future, your kindness will be the loudest thing.",
+      "Every day feels lighter because you exist in it.",
+      "You’re the soft power that time can’t outshine.",
+      "The world gets better in your presence, almost without trying.",
+      "If starlight had a voice, it would speak like you." 
+    ];
+    const qp = new URLSearchParams(window.location.search);
+    const v = qp.get('v') || 'jasmine';
+    const h = parseFloat(qp.get('h')||'0');
+    const idx = Math.floor(Math.random()*PHRASES.length);
+    document.getElementById('phrase').textContent = PHRASES[idx];
+    document.getElementById('meta').textContent = `Variant: ${v} · Hue: ${isNaN(h)?'—':h+'°'} · Line #${idx+1}`;
+    document.getElementById('copy').addEventListener('click', async ()=>{
+      try{ await navigator.clipboard.writeText(PHRASES[idx]); }catch{}
+    });
+  </script>
+</body>
+</html>

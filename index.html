@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#0b0f1a" />
+  <title>Yasmeen ✦ A Futuristic Love Letter</title>
+  <meta name="description" content="A futuristic, modern, romantic page dedicated to Yasmeen." />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>✦</text></svg>">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <!-- Ambient background -->
+  <div class="bg">
+    <canvas id="stars" class="stars" aria-hidden="true"></canvas>
+    <div class="aurora a1"></div>
+    <div class="aurora a2"></div>
+    <div class="aurora a3"></div>
+    <div class="grain"></div>
+  </div>
+
+  <header class="header">
+    <a class="brand" href="#top" aria-label="Home">
+      <span class="brand__dot"></span>
+      <span class="brand__text">Yasmeen</span>
+      
+    </a>
+
+    <button class="navToggle" aria-label="Open menu" aria-expanded="false">
+      <span></span><span></span><span></span>
+    </button>
+
+    <nav class="nav" data-nav>
+      <a href="#about">About</a>
+      <a href="#moments">Moments</a>
+      <a href="#letter">Letter</a>
+      <a href="#gallery">Gallery</a>
+      <a href="#romantic-garden">Romantic Garden</a>
+      <a href="#finale" class="nav__cta">For Yasmeen ✦</a>
+      <div class="musicMenu" id="musicMenu">
+        <button class="musicPill" id="musicPill" type="button" aria-haspopup="menu" aria-expanded="false">
+          <span class="musicDot"></span>
+          <span class="musicLabel">Music</span>
+          <span class="musicNow" id="musicNow">Romantic Mix</span>
+        </button>
+        <div class="musicDropdown" id="musicDropdown" role="menu" aria-label="Choose a song">
+          <div class="musicPanel">
+            <div class="musicControls" id="musicControls" aria-label="Playback controls">
+              <button class="ctrlBtn" id="ctrlPrev" type="button" title="Previous">⏮</button>
+              <button class="ctrlBtn" id="ctrlPlay" type="button" title="Play/Pause">⏯</button>
+              <button class="ctrlBtn" id="ctrlStop" type="button" title="Stop">⏹</button>
+              <button class="ctrlBtn" id="ctrlNext" type="button" title="Next">⏭</button>
+              <div class="progressWrap">
+                <input type="range" id="musicSeek" min="0" max="100" value="0" step="0.1" aria-label="Seek" />
+                <span class="timeReadout" id="musicTime">0:00 / 0:00</span>
+              </div>
+            </div>
+            <button class="soundPill" id="soundToggle" type="button" aria-pressed="false">
+              Sound: Off
+            </button>
+          </div>
+          <div class="musicHint" data-music-hint></div>
+          <div class="musicList" id="musicList"></div>
+        </div>
+      </div>
+    </nav>
+  </header>
+
+  <main id="top">
+    <!-- HERO -->
+    <section class="hero section">
+      <div class="hero__content reveal">
+        <p class="kicker">A page for someone timeless</p>
+        <h1 class="title">
+          Yasmeen,
+          <span class="title__accent">the elegance</span>
+          the future can’t outshine.
+        </h1>
+        <p class="subtitle">
+          Built with a modern glow, a romantic pulse, and a little stardust —
+          just like you.
+        </p>
+
+        <div class="hero__actions">
+          <a class="btn btn--primary" href="#letter">Read the Letter</a>
+          <a class="btn btn--ghost" href="#gallery">See the Gallery</a>
+        </div>
+
+        <div class="hero__stats">
+          <div class="stat">
+            <span class="stat__num">∞</span>
+            <span class="stat__label">Admiration</span>
+          </div>
+          <div class="stat">
+            <span class="stat__num">01</span>
+            <span class="stat__label">One of One</span>
+          </div>
+          <div class="stat">
+            <span class="stat__num">♥</span>
+            <span class="stat__label">Soft Power</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="scrollHint" aria-hidden="true">
+        <span>scroll</span>
+        <div class="scrollHint__line"></div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section id="about" class="section">
+      <div class="container">
+        <div class="sectionHead reveal">
+          <h2>About Yasmeen</h2>
+          <p>Elegant. Kind. Unmatched. This section is yours to customize.</p>
+        </div>
+
+        <div class="grid2">
+          <div class="glassCard reveal">
+            <h3 class="glassCard__title">The Aura</h3>
+            <p class="glassCard__text">
+              Yasmeen has that rare energy: calm confidence, warm presence,
+              and a style that feels effortless.
+            </p>
+          </div>
+
+          <div class="glassCard reveal">
+            <h3 class="glassCard__title">The Future</h3>
+            <p class="glassCard__text">
+              Some people feel like progress — like the world gets better
+              simply because they exist in it.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- MOMENTS / TIMELINE -->
+    <section id="moments" class="section">
+      <div class="container">
+        <div class="sectionHead reveal">
+          <h2>Moments</h2>
+          <p>A timeline of memories (replace these with real ones).</p>
+        </div>
+
+        <div class="timeline">
+          <div class="tItem reveal">
+            <div class="tDot"></div>
+            <div class="tCard">
+              <h3>First Hello</h3>
+              <p>That first conversation that felt oddly unforgettable.</p>
+              <span class="tMeta">Memory #001</span>
+            </div>
+          </div>
+
+          <div class="tItem reveal">
+            <div class="tDot"></div>
+            <div class="tCard">
+              <h3>Laughs That Stayed</h3>
+              <p>When the moment became a highlight reel in your head.</p>
+              <span class="tMeta">Memory #014</span>
+            </div>
+          </div>
+
+          <div class="tItem reveal">
+            <div class="tDot"></div>
+            <div class="tCard">
+              <h3>Quiet Support</h3>
+              <p>Soft words, big impact — the kind you never forget.</p>
+              <span class="tMeta">Memory #027</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LETTER -->
+    <section id="letter" class="section">
+      <div class="container">
+        <div class="sectionHead reveal">
+          <h2>The Letter</h2>
+          <p>Make it personal. Keep it sincere. Keep it Yasmeen.</p>
+        </div>
+
+        <article class="letter glassCard reveal">
+          <h3 class="letter__title">Dear Yasmeen,</h3>
+          <p>
+            Some people leave an impression. You leave a <em>presence</em>.
+            Not loud, not forced — just naturally elegant, naturally you. The kind of elegance that isn't only in how you look, but in how you make people feel: calmer, lighter, a little more hopeful.
+          </p>
+          <p>
+            What I admire most is the way you turn ordinary moments into something worth keeping. A simple conversation with you can feel like a reset — like the world gets quieter and softer for a second. And your smile… it has this effect where time slows down, and suddenly everything makes sense.
+          </p>
+          <p>
+            So I built this page around you — not because you needed it, but because you <em>deserve</em> it. A small space that reflects what you carry: modern glow, gentle warmth, and that rare charm that doesn't try too hard — it just exists. I wanted it to feel like you: classy, romantic, a little futuristic… and unforgettable.
+          </p>
+          <p>
+            Yasmeen, if the future could write poetry, it would still struggle to describe you properly. Because you're not just beautiful — you're the kind of person people remember for the way you shine without even trying.
+          </p>
+          <p>
+            If nobody told you today: you are deeply admired. You are appreciated. You are a quiet kind of magic. And you deserve the softest love and the brightest life.
+          </p>
+          <p class="letter__sign">
+            — From someone who's honestly grateful you exist ✦
+          </p>
+
+          <div class="letter__actions">
+            <button class="btn btn--primary" id="confettiBtn">Send Sparkles ✨</button>
+            <button class="btn btn--ghost" id="copyBtn">Copy a Sweet Line</button>
+          </div>
+
+          <p class="tiny" id="copyStatus" aria-live="polite"></p>
+        </article>
+      </div>
+    </section>
+
+    <!-- GALLERY -->
+    <section id="gallery" class="section">
+      <div class="container">
+        <div class="sectionHead reveal">
+          <h2>Gallery</h2>
+          <p>Add photos later (kept as placeholders for now).</p>
+        </div>
+
+        <div class="gallery">
+          <div class="gCard reveal">
+            <div class="gImg g1" role="img" aria-label="Placeholder image 1"></div>
+            <div class="gText">
+              <h3>Starlight Mood</h3>
+              <p>Clean, modern, and romantic.</p>
+            </div>
+          </div>
+
+          <div class="gCard reveal">
+            <div class="gImg g2" role="img" aria-label="Placeholder image 2"></div>
+            <div class="gText">
+              <h3>Aurora Glow</h3>
+              <p>Soft color. Future energy.</p>
+            </div>
+          </div>
+
+          <div class="gCard reveal">
+            <div class="gImg g3" role="img" aria-label="Placeholder image 3"></div>
+            <div class="gText">
+              <h3>Rose Neon</h3>
+              <p>Romance, but elevated.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ROMANTIC GARDEN -->
+    <section id="romantic-garden" class="section">
+      <div class="container">
+        <div class="sectionHead reveal">
+          <h2>Romantic Garden</h2>
+          <p>A live, pixel-drawn jasmine garden grows at the bottom of the page. Hover, tap, or focus blooms to open them and stream a soft line for Yasmeen.</p>
+        </div>
+      </div>
+      <!-- Full-width garden anchored stable under this section -->
+      <div class="garden" aria-label="Romantic Garden"></div>
+    </section>
+
+    <!-- FINALE -->
+    <section id="finale" class="section finale">
+      <div class="container">
+        <div class="finale__wrap glassCard reveal">
+          <h2>For Yasmeen ✦</h2>
+          <p>
+            If you’re reading this: you’re appreciated more than words can hold.
+            Stay brilliant.
+          </p>
+          <a class="btn btn--primary" href="#top">Back to the Top</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>
+      Built with ♥ for Yasmeen · <span id="year"></span>
+      <span class="sep">·</span>
+      Hosted on GitHub Pages
+    </p>
+  </footer>
+
+  <!-- Floating hearts layer -->
+  <div class="hearts" aria-hidden="true"></div>
+  <div class="phraseLayer" aria-hidden="true"></div>
+  <div class="phraseStream" aria-live="polite" aria-hidden="true"></div>
+
+  <div id="ytPlayer" aria-hidden="true"></div>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script src="./app.js"></script>
+  
+</body>
+</html>
