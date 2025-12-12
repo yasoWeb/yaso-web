@@ -851,9 +851,6 @@ if (musicMenu) {
   musicMenu.addEventListener("mouseenter", () => {
     if (!('ontouchstart' in window)) openDropdown();
   });
-  musicMenu.addEventListener("mouseleave", () => {
-    if (!('ontouchstart' in window)) closeDropdown();
-  });
   soundToggle?.addEventListener("click", () => toggleMuteAndPlay());
   ctrlPlay?.addEventListener("click", () => togglePlay());
   ctrlStop?.addEventListener("click", () => stopPlayback());
@@ -868,7 +865,7 @@ if (musicMenu) {
   });
 
   // Init music on page load
-  if (localStorage.getItem(LS_MUTED) == null) setMuted(true);
+  if (localStorage.getItem(LS_MUTED) == null) setMuted(false);
   const startId = pickRandomTrack();
   console.log("[Music] init: starting with", startId);
   ensurePlayer(startId).catch((err) => {
