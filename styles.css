@@ -405,6 +405,33 @@ button{ font-family: inherit; }
   border-radius: 16px;
   padding: 12px 16px;
   border: 1px solid rgba(255,255,255,.14);
+
+.player-wrap {
+  position: fixed;
+  bottom: 1rem;
+  right: 1rem;
+  z-index: 1000;
+}
+
+#yt-player { width: 0; height: 0; overflow: hidden; }
+
+.enable-sound {
+  display: none;
+  padding: 0.6rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.25);
+  background: rgba(7, 11, 20, 0.6);
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+}
+
+.enable-sound.enabled {
+  opacity: 0.7;
+  cursor: default;
+}
   background: rgba(255,255,255,.05);
   color: var(--ink);
   transition: transform .18s ease, background .18s ease, border .18s ease;

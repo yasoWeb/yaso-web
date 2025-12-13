@@ -356,10 +356,12 @@ async function ensurePlayer(startTrackId) {
         console.log("[Music] player onReady");
         setMuted(isMuted());
         console.log("[Music] player onReady: muted?", isMuted());
-        try { player.playVideo(); } catch (_) {}
+        if (!isMuted()) {
+          try { player.playVideo(); } catch (_) {}
+        }
         try { console.log("[Music] player onReady: state", player.getPlayerState?.()); } catch {}
         updateMusicUI();
-        startProgressTimer();
+        if (!isMuted()) startProgressTimer();
       },
       onStateChange: (e) => {
         console.log("[Music] player onStateChange", e?.data);
@@ -417,6 +419,26 @@ function toggleMuteAndPlay() {
   }
   try { console.log("[Music] toggleMuteAndPlay: state after click", player?.getPlayerState?.()); } catch {}
   updateMusicUI();
+}
+
+function promptEnableSound() {
+  const userAllowed = confirm("🔊 Enable Sound?\n\nAllow: Enable music\nCancel: Keep sound off");
+  console.log("[Music] promptEnableSound: userAllowed =", userAllowed);
+  if (userAllowed) {
+    console.log("[Music] promptEnableSound: setting unmuted and playing");
+    setMuted(false);
+    try { 
+      if (player?.playVideo) {
+        player.playVideo();
+        console.log("[Music] promptEnableSound: playVideo called");
+      }
+    } catch (e) { 
+      console.error("[Music] promptEnableSound: playVideo failed:", e); 
+    }
+  } else {
+    console.log("[Music] promptEnableSound: user denied, keeping muted");
+    setMuted(true);
+  }
 }
 
 function stopPlayback() {
@@ -842,6 +864,20 @@ window.addEventListener("resize", ensureFlowers);
 ensureFlowers();
 startAmbientHearts();
 
+// Init music on page load (runs first, independent of UI)
+setMuted(true);
+const startId = pickRandomTrack();
+console.log("[Music] init: starting with", startId);
+ensurePlayer(startId).catch((err) => {
+  console.warn("[Music] Music init failed:", err.message);
+});
+
+// Prompt user to enable sound after a delay
+setTimeout(() => {
+  console.log("[Music] showing sound prompt");
+  promptEnableSound();
+}, 2500);
+
 // Music widget UI bindings
 if (musicMenu) {
   musicPill?.addEventListener("click", (e) => {
@@ -863,14 +899,7 @@ if (musicMenu) {
     const target = dur * (pct / 100);
     try { player.seekTo(target, true); } catch (_) {}
   });
-
-  // Init music on page load
-  if (localStorage.getItem(LS_MUTED) == null) setMuted(false);
-  const startId = pickRandomTrack();
-  console.log("[Music] init: starting with", startId);
-  ensurePlayer(startId).catch((err) => {
-    console.warn("[Music] Music init failed:", err.message);
-  });
+  
   document.addEventListener("click", (e) => {
     if (!musicMenu.contains(e.target)) closeDropdown();
   });
