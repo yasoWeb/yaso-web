@@ -238,10 +238,25 @@ const PETAL_VARIATION = 2; // allows 6–8 petals for variation
 
 // ===== Background Music via YouTube (robust loader) =====
 const TRACKS = [
-  { id:"asabak", title:"Abdulrahman Mohammed & Mohab Omer — أصابك عشق", yt:"E-n6TIa2lvc" }, // lyrics version
-  { id:"amr",    title:"Amr Diab & Orange — خطفوني",                 yt:"QvDb3YGYfcs" }, // lyric upload
-  { id:"bigsam", title:"BiGSaM — ست بيتي",                           yt:"l3C4cqtwpkM" }, // official MV (unchanged)
-  { id:"sonder", title:"Sonder — Too Fast",                          yt:"flM8-rR0_O8" }, // audio version
+  { id:"asabak",   title:"Abdulrahman Mohammed & Mohab Omer — أصابك عشق", yt:"E-n6TIa2lvc" }, // lyrics version
+  { id:"amr",      title:"Amr Diab & Orange — خطفوني",                   yt:"QvDb3YGYfcs" }, // lyric upload
+  { id:"bigsam",   title:"BiGSaM — ست بيتي",                             yt:"l3C4cqtwpkM" }, // official MV (unchanged)
+  { id:"sonder",   title:"Sonder — Too Fast",                             yt:"flM8-rR0_O8" }, // audio version
+
+  { id:"needed",     title:"Brent Faiyaz — Needed",                       yt:"jl1Ysej81QA" },
+  { id:"nerkab",     title:"Abu Ward — نركب هالسيارة (Nerkab Hal Syara)",  yt:"y6w8wcE2QK0" },
+  { id:"someoneNew", title:"Sonder — Someone New",                        yt:"kX8thdw7tOE" },
+  { id:"insecure",   title:"Brent Faiyaz — Insecure",                     yt:"gRXQGdQHHlw" },
+  { id:"sirens",     title:"Sonder — Sirens",                             yt:"x-M3G3JXSLI" },
+  { id:"deadman",    title:"Brent Faiyaz — DEAD MAN WALKING",             yt:"pBR01ndtids" },
+  { id:"addictions", title:"Brent Faiyaz — ADDICTIONS (feat. Tre' Amani)", yt:"YoAjth_dwAQ" },
+  { id:"aroundme",   title:"Brent Faiyaz — Around Me",                    yt:"EyfFq4ffz8w" },
+  { id:"missinout",  title:"Brent Faiyaz — Missin Out",                   yt:"RCg1iIvwy0E" },
+  { id:"shokran",    title:"Amr Diab — شكراً من هنا لبكرة",               yt:"Gj9pj3-M-eE" },
+  { id:"gangoverluv",title:"Brent Faiyaz — Gang Over Luv",                yt:"xr-IZmMZYM8" },
+  { id:"bisaraha",   title:"Abeer Nehme — بصراحة (Bi Saraha)",            yt:"rH9mDCe83v0" },
+  { id:"yalayaly",   title:"Sherine — يا ليالي (Ya Layaly)",              yt:"d6R1y2wVM8Y" },
+  { id:"meeny",      title:"Nour — Meen Ysadak (feat. Eldab3)",           yt:"5uh9imWsNNY" },
 ];
 
 const musicMenu = document.getElementById("musicMenu");
