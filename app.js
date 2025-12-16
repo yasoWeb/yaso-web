@@ -599,7 +599,7 @@ function streamPhrase(text, onDone) {
         phraseOverlay.classList.remove("is-visible");
         overlayBusy = false;
         onDone?.();
-      }, 900);
+      }, 1500);
     }
   }, speed);
 }
