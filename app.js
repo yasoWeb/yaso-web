@@ -217,6 +217,12 @@ const PHRASES = [
   "You’re the ‘wow’ my life was missing.",
   "You’re the kind of pretty that feels peaceful.",
   "You make my heart feel like it’s smiling.",
+  "Yasmeen, your elegance turns moments into constellations.",
+  "In a quieter future, your kindness will be the loudest thing.",
+  "Every day feels lighter because you exist in it.",
+  "You’re the soft power that time can’t outshine.",
+  "The world gets better in your presence, almost without trying.",
+  "If starlight had a voice, it would speak like you."
 ];
 
 
@@ -228,6 +234,8 @@ const MAX_FLOWERS = 70;
 const MIN_FLOWERS = 12;
 const MAX_PHRASES = 8;
 const dpr = Math.min(window.devicePixelRatio || 1, 2);
+let phraseOrder = [];
+let phrasePtr = 0;
 let overlayBusy = false;
 const bloomQueue = [];
 const FLOWER_MARGIN_PCT = 3; // keep flowers away from viewport edges
@@ -235,6 +243,7 @@ const FLOWER_JITTER_PCT = 2; // slight jitter to avoid perfect grid
 const LEAF_SCALE = 0.65; // smaller leaves
 const PETAL_BASE_COUNT = 6;
 const PETAL_VARIATION = 2; // allows 6–8 petals for variation
+let diagnosisModal = null;
 
 // ===== Background Music via YouTube (robust loader) =====
 const TRACKS = [
@@ -281,6 +290,109 @@ const LS_MUTED = "musicMuted";
 function randomItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function hash2d(x, y) {
   return (Math.sin(x * 12.9898 + y * 78.233) * 43758.5453) % 1;
+}
+
+function closeDiagnosisModal() {
+  if (!diagnosisModal) return;
+  diagnosisModal.remove();
+  diagnosisModal = null;
+  document.removeEventListener("keydown", onDiagEsc, true);
+}
+
+function onDiagEsc(e) {
+  if (e.key === "Escape") closeDiagnosisModal();
+}
+
+function buildDiagnosis(sc, state) {
+  if (!sc?.diagnosis) return null;
+  const total = sc.steps?.length || 7;
+  const score = state?.score ?? 0;
+  const pct = score / total;
+  const base = sc.diagnosis;
+
+  if (pct >= 0.85) return { ...base, score, total };
+
+  if (pct >= 0.5) {
+    return {
+      title: `${base.title} (in progress)`,
+      short: `${score}/${total} strong picks — stay consistent and it locks in.`,
+      text: `You showed flashes of ${base.short.toLowerCase()} but drifted on a few choices.\nHold the same calm pace across every step and the pattern sticks.`,
+      score,
+      total,
+    };
+  }
+
+  return {
+    title: `${base.title} (realign)`,
+    short: `${score}/${total}. The signal was fuzzy this round.`,
+    text: `You pulled away from ${base.short.toLowerCase()} this run. Slow down, listen, and pick the options that match the steadier version of you. Next run will read clearer.`,
+    score,
+    total,
+  };
+}
+
+function showDiagnosisModal(sc, state) {
+  const diag = buildDiagnosis(sc, state);
+  if (!diag) return;
+  closeDiagnosisModal();
+
+  const overlay = document.createElement("div");
+  overlay.className = "diagOverlay";
+
+  const card = document.createElement("div");
+  card.className = "diagCard";
+
+  const closeBtn = document.createElement("button");
+  closeBtn.type = "button";
+  closeBtn.className = "diagClose";
+  closeBtn.setAttribute("aria-label", "Close diagnosis");
+  closeBtn.textContent = "×";
+
+  const title = document.createElement("h3");
+  title.className = "diagTitle";
+  title.textContent = diag.title;
+
+  const meta = document.createElement("p");
+  meta.className = "diagMeta";
+  meta.textContent = `Score: ${diag.score}/${diag.total}`;
+
+  const short = document.createElement("p");
+  short.className = "diagShort";
+  short.textContent = diag.short;
+
+  const body = document.createElement("p");
+  body.className = "diagText";
+  body.innerHTML = String(diag.text || "").replace(/\n/g, "<br>");
+
+  closeBtn.addEventListener("click", closeDiagnosisModal);
+  overlay.addEventListener("click", (e) => { if (e.target === overlay) closeDiagnosisModal(); });
+
+  card.appendChild(closeBtn);
+  card.appendChild(title);
+  card.appendChild(meta);
+  card.appendChild(short);
+  card.appendChild(body);
+  overlay.appendChild(card);
+  document.body.appendChild(overlay);
+  diagnosisModal = overlay;
+  document.addEventListener("keydown", onDiagEsc, true);
+}
+
+function shuffleArray(arr) {
+  const out = arr.slice();
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
+
+function nextUniquePhrase() {
+  if (!phraseOrder.length || phrasePtr >= phraseOrder.length) {
+    phraseOrder = shuffleArray(PHRASES);
+    phrasePtr = 0;
+  }
+  return phraseOrder[phrasePtr++];
 }
 
 function isMuted() {
@@ -822,7 +934,7 @@ function triggerBloom(btn) {
 function runBloom(btn) {
   if (!btn) return;
   const rect = btn.getBoundingClientRect();
-  const phrase = randomItem(PHRASES);
+  const phrase = nextUniquePhrase();
   const onDone = () => {
     overlayBusy = false;
     processQueue();
@@ -902,6 +1014,9 @@ if (musicMenu) {
   musicMenu.addEventListener("mouseenter", () => {
     if (!('ontouchstart' in window)) openDropdown();
   });
+  musicMenu.addEventListener("mouseleave", () => {
+    if (!('ontouchstart' in window)) closeDropdown();
+  });
   soundToggle?.addEventListener("click", () => toggleMuteAndPlay());
   ctrlPlay?.addEventListener("click", () => togglePlay());
   ctrlStop?.addEventListener("click", () => stopPlayback());
@@ -938,3 +1053,1388 @@ window.__music.debug = () => {
     });
   } catch(e) { console.error("[Music] debug error", e); }
 };
+
+// Choice game data
+const scenarios = [
+  {
+    id: "calm-orbit",
+    label: "Calm Orbit",
+    reward: "Some people feel like home without trying.",
+    diagnosis: {
+      title: "Secure Co-Regulator",
+      text: "You instinctively slow the room down. You read emotional weather without needing a forecast.\nYou don’t rush connection — you make space for it.\nPeople feel calmer around you not because you fix things,\nbut because you don’t disappear when things get quiet.",
+      short: "You create safety without effort."
+    },
+    completionText: {
+      low: [
+        "That run was a little chaotic 😅 Try again—softly this time.",
+        "You missed a few cues, but the effort was cute. Another round?",
+        "Not quite the vibe yet—one more try and you’ll feel it."
+      ],
+      mid: [
+        "Close. You’re picking up the gentle signals 👀",
+        "You’re almost there—one better choice per step and it clicks.",
+        "That was warm… just not flawless. Run it back?"
+      ]
+    },
+    steps: [
+      {
+        prompt: "Someone important is quiet today. You…",
+        options: [
+          { text: "Sit nearby and stay gentle.", feedback: "Comfort doesn't need sound.", isOptimal: true },
+          { text: "Check in once then wait.", feedback: "Noted the silence.", isOptimal: false },
+          { text: "Lead with jokes.", feedback: "Timing feels off.", isOptimal: false },
+          { text: "Ignore it.", feedback: "Silence just stretched.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Late-night talk drifts into randomness.",
+        options: [
+          { text: "Let it wander.", feedback: "Best talks have no map.", isOptimal: true },
+          { text: "Keep it light only.", feedback: "Safe, but shallow.", isOptimal: false },
+          { text: "Switch topics quickly.", feedback: "Missed the spark.", isOptimal: false },
+          { text: "End early.", feedback: "Night had more to say.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "They vent about a rough day.",
+        options: [
+          { text: "Listen without fixing.", feedback: "Staying present works.", isOptimal: true },
+          { text: "Offer solutions fast.", feedback: "Helpful but rushed.", isOptimal: false },
+          { text: "Compare with your own story.", feedback: "Center shifted away.", isOptimal: false },
+          { text: "Downplay it.", feedback: "Door closed.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Inside jokes mean…",
+        options: [
+          { text: "Shared language.", feedback: "A tiny world built together.", isOptimal: true },
+          { text: "Old funny memories.", feedback: "Nice but surface.", isOptimal: false },
+          { text: "Silly distractions.", feedback: "Missed the depth.", isOptimal: false },
+          { text: "Pointless.", feedback: "Magic lost.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Comfortable silence feels…",
+        options: [
+          { text: "Peaceful.", feedback: "Trust feels easy.", isOptimal: true },
+          { text: "Slightly awkward.", feedback: "You're close, not there yet.", isOptimal: false },
+          { text: "Boring.", feedback: "Magic missed.", isOptimal: false },
+          { text: "Unacceptable.", feedback: "Space got noisy.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Being weird together is…",
+        options: [
+          { text: "Encouraged.", feedback: "Authenticity unlocked.", isOptimal: true },
+          { text: "Sometimes okay.", feedback: "Half-open door.", isOptimal: false },
+          { text: "Embarrassing.", feedback: "Walls up.", isOptimal: false },
+          { text: "Never.", feedback: "Mask stays on.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "This connection feels like…",
+        options: [
+          { text: "Home.", feedback: "Warm choice.", isOptimal: true },
+          { text: "Fun only.", feedback: "Nice, incomplete.", isOptimal: false },
+          { text: "Casual.", feedback: "Surface level.", isOptimal: false },
+          { text: "Replaceable.", feedback: "Signal fading.", isOptimal: false }
+        ]
+      }
+    ]
+  },
+  {
+    id: "steady-horizon",
+    label: "Steady Horizon",
+    reward: "Peace, loyalty, warmth — the steady kind.",
+    diagnosis: {
+      title: "Secure Anchor",
+      text: "You don’t confuse intensity with depth. You choose consistency over chaos.\nWhen things get hard, you stay, you listen, and you build something that lasts.\nNot flashy. Just unshakeable.",
+      short: "You’re the calm after the storm — and the reason it passes."
+    },
+    completionText: {
+      low: [
+        "That was a bumpy finish 😅 Try again with calmer choices.",
+        "A little reactive—but you can turn it around. Again?",
+        "Not the steadiest run. Let’s try for smoother."
+      ],
+      mid: [
+        "Nice—getting steadier. You’re close 👀",
+        "Almost solid. One more run and it lands.",
+        "You’re building the right rhythm—just missing the last bit."
+      ]
+    },
+    steps: [
+      {
+        prompt: "Conflict starts. You…",
+        options: [
+          { text: "Stay calm and listen.", feedback: "Emotional strength.", isOptimal: true },
+          { text: "Defend right away.", feedback: "Reactive move.", isOptimal: false },
+          { text: "Go distant.", feedback: "Walls up.", isOptimal: false },
+          { text: "Escalate.", feedback: "Damage done.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Support looks like…",
+        options: [
+          { text: "Showing up consistently.", feedback: "Reliability resonates.", isOptimal: true },
+          { text: "Grand gestures only.", feedback: "Rare sparks.", isOptimal: false },
+          { text: "Words without action.", feedback: "Incomplete.", isOptimal: false },
+          { text: "Avoiding involvement.", feedback: "Absence noted.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Hard conversations are…",
+        options: [
+          { text: "Necessary.", feedback: "Future-focused.", isOptimal: true },
+          { text: "Only when forced.", feedback: "Progress slows.", isOptimal: false },
+          { text: "Draining.", feedback: "Growth stalled.", isOptimal: false },
+          { text: "Pointless.", feedback: "Future skipped.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Emotional safety means…",
+        options: [
+          { text: "No fear in being honest.", feedback: "Real shelter.", isOptimal: true },
+          { text: "Fewer arguments.", feedback: "Not the same.", isOptimal: false },
+          { text: "Silence.", feedback: "Avoidance, not safety.", isOptimal: false },
+          { text: "Control.", feedback: "Not safety.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Loyalty shows in…",
+        options: [
+          { text: "Actions.", feedback: "Proof over promises.", isOptimal: true },
+          { text: "Promises.", feedback: "Easy to make.", isOptimal: false },
+          { text: "Possessiveness.", feedback: "Red flag.", isOptimal: false },
+          { text: "Surveillance.", feedback: "Wrong door.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Steady love should feel…",
+        options: [
+          { text: "Peaceful.", feedback: "Stability unlocked.", isOptimal: true },
+          { text: "Constant intensity.", feedback: "Burnout risk.", isOptimal: false },
+          { text: "Dramatic.", feedback: "Exhausting.", isOptimal: false },
+          { text: "Unpredictable.", feedback: "Unsteady ground.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "This energy feels like…",
+        options: [
+          { text: "A future.", feedback: "Longevity chosen.", isOptimal: true },
+          { text: "A phase.", feedback: "Temporary thinking.", isOptimal: false },
+          { text: "A risk.", feedback: "Fear talking.", isOptimal: false },
+          { text: "A burden.", feedback: "Foundation cracking.", isOptimal: false }
+        ]
+      }
+    ]
+  },
+  {
+    id: "inner-north",
+    label: "Inner North",
+    reward: "The strongest warmth starts from knowing yourself.",
+    diagnosis: {
+      title: "Self-Aligned Navigator",
+      text: "You don’t outsource your worth. You listen inward before reacting outward.\nHealing isn’t aesthetic — it’s patient and personal.\nYou are becoming your own safe place.",
+      short: "You trust your inner compass."
+    },
+    completionText: {
+      low: [
+        "That was a tough one 😅 Try again—be a little kinder to yourself.",
+        "You rushed a few answers. Slow down and listen inward.",
+        "Not quite aligned yet. Another try—gentle mode."
+      ],
+      mid: [
+        "Close. You’re reading yourself better already 👀",
+        "Almost there—one more run with steadier choices.",
+        "Good progress. You’re one step away from clicking into place."
+      ]
+    },
+    steps: [
+      {
+        prompt: "Alone time is…",
+        options: [
+          { text: "Necessary.", feedback: "Self-awareness unlocked.", isOptimal: true },
+          { text: "Occasional.", feedback: "Decent start.", isOptimal: false },
+          { text: "Lonely.", feedback: "Worth exploring.", isOptimal: false },
+          { text: "Useless.", feedback: "Avoidance detected.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Emotions should be…",
+        options: [
+          { text: "Felt.", feedback: "That's healing.", isOptimal: true },
+          { text: "Controlled tightly.", feedback: "Careful, might bottle up.", isOptimal: false },
+          { text: "Ignored.", feedback: "They return louder.", isOptimal: false },
+          { text: "Hidden.", feedback: "Heavy load.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Boundaries exist to…",
+        options: [
+          { text: "Protect peace.", feedback: "Healthy choice.", isOptimal: true },
+          { text: "Push people away.", feedback: "Misread.", isOptimal: false },
+          { text: "Create distance.", feedback: "Not the point.", isOptimal: false },
+          { text: "Control others.", feedback: "Nope.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Growth feels…",
+        options: [
+          { text: "Uncomfortable.", feedback: "That's how it works.", isOptimal: true },
+          { text: "Only exciting.", feedback: "Half the truth.", isOptimal: false },
+          { text: "Scary only.", feedback: "Valid, but don't freeze.", isOptimal: false },
+          { text: "Unnecessary.", feedback: "Stuck loop.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Self-talk should be…",
+        options: [
+          { text: "Kind.", feedback: "You're learning.", isOptimal: true },
+          { text: "Blunt and harsh.", feedback: "Careful.", isOptimal: false },
+          { text: "Critical.", feedback: "Damage accumulates.", isOptimal: false },
+          { text: "Absent.", feedback: "Disconnected.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Healing takes…",
+        options: [
+          { text: "Time.", feedback: "Patience rewarded.", isOptimal: true },
+          { text: "Distraction.", feedback: "Temporary patch.", isOptimal: false },
+          { text: "Validation only.", feedback: "External, not enough.", isOptimal: false },
+          { text: "Suppression.", feedback: "Pain delayed.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "You are allowed to…",
+        options: [
+          { text: "Take space.", feedback: "Self-respect chosen.", isOptimal: true },
+          { text: "Overgive.", feedback: "Burnout ahead.", isOptimal: false },
+          { text: "Shrink.", feedback: "Don't.", isOptimal: false },
+          { text: "Apologize for existing.", feedback: "Never.", isOptimal: false }
+        ]
+      }
+    ]
+  },
+  {
+    id: "quiet-voltage",
+    label: "Quiet Voltage",
+    reward: "Some bonds start quiet and become the answer.",
+    diagnosis: {
+      title: "Slow-Burn Attachment",
+      text: "You feel it before you admit it. The pause, the tension, the lingering look.\nYou don’t rush — but when you choose, you choose fully.\nQuiet connections don’t scare you. They wake you up.",
+      short: "You recognize love before it speaks."
+    },
+    completionText: {
+      low: [
+        "You dodged every obvious signal 😅 Try again—braver this time.",
+        "That was denial-speedrun energy. One more round?",
+        "You kept choosing the safe option… and missed the point."
+      ],
+      mid: [
+        "Close. The tension is there—you’re almost owning it 👀",
+        "Nearly. One more run and you’ll stop hesitating.",
+        "That was almost fearless. Try again and commit."
+      ]
+    },
+    steps: [
+      {
+        prompt: "Long eye contact means…",
+        options: [
+          { text: "Something unspoken.", feedback: "Chemistry noted.", isOptimal: true },
+          { text: "Coincidence.", feedback: "Signal missed.", isOptimal: false },
+          { text: "Awkwardness.", feedback: "Overthinking.", isOptimal: false },
+          { text: "Nothing.", feedback: "Denial mode.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Comfort plus attraction feels…",
+        options: [
+          { text: "Rare.", feedback: "You noticed.", isOptimal: true },
+          { text: "Confusing.", feedback: "Fair, but keep looking.", isOptimal: false },
+          { text: "Risky.", feedback: "True, but fear-led.", isOptimal: false },
+          { text: "Avoidable.", feedback: "Dodging everything.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Touch lingers because…",
+        options: [
+          { text: "It wants to.", feedback: "Honest answer.", isOptimal: true },
+          { text: "Accident.", feedback: "Sure.", isOptimal: false },
+          { text: "Habit.", feedback: "Doubtful.", isOptimal: false },
+          { text: "It doesn't.", feedback: "Then why pause?", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Jealousy appears when…",
+        options: [
+          { text: "You care.", feedback: "Exactly.", isOptimal: true },
+          { text: "You're insecure.", feedback: "Not really more of caring.", isOptimal: false },
+          { text: "You're controlling.", feedback: "Not it.", isOptimal: false },
+          { text: "Never.", feedback: "Unlikely.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Closest ally plus more equals…",
+        options: [
+          { text: "Ideal.", feedback: "Dangerously perfect.", isOptimal: true },
+          { text: "Complicated.", feedback: "True but worth it.", isOptimal: false },
+          { text: "Impossible.", feedback: "Fear talking.", isOptimal: false },
+          { text: "Wrong.", feedback: "Hard disagree.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "If feelings grow…",
+        options: [
+          { text: "Let them.", feedback: "Brave choice.", isOptimal: true },
+          { text: "Ignore them.", feedback: "Temporary fix.", isOptimal: false },
+          { text: "Joke them away.", feedback: "Avoidance.", isOptimal: false },
+          { text: "Shut down.", feedback: "Loss.", isOptimal: false }
+        ]
+      },
+      {
+        prompt: "Asked honestly, you'd…",
+        options: [
+          { text: "Choose them.", feedback: "Box unlocked.", isOptimal: true },
+          { text: "Hesitate.", feedback: "Almost.", isOptimal: false },
+          { text: "Say unsure.", feedback: "Not yet.", isOptimal: false },
+          { text: "Walk away.", feedback: "Game over.", isOptimal: false }
+        ]
+      }
+    ]
+  }
+];
+
+const choiceEls = {
+  wrap: document.getElementById("choiceGame"),
+  list: document.getElementById("scenarioList"),
+  prompt: document.getElementById("gamePrompt"),
+  options: document.getElementById("gameOptions"),
+  feedback: document.getElementById("gameFeedback"),
+  next: document.getElementById("nextStep"),
+  progressBar: document.getElementById("gameProgressBar"),
+  progressText: document.getElementById("gameProgressText"),
+  summary: document.getElementById("gameSummary"),
+  completion: document.getElementById("completionSection"),
+  status: document.getElementById("gameStatus"),
+  restart: document.getElementById("restartScenario"),
+};
+
+const scenarioState = {};
+let activeScenarioId = scenarios[0]?.id || null;
+
+function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+
+function pick(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// === Fullscreen 3D moment overlay ===
+let momentActive = false;
+let momentEl = null;
+let momentTimers = [];
+let momentAutoResetTimer = null;
+let momentWasMuted = null;
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, m => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[m] || m));
+}
+
+function seedParticles(container) {
+  if (!container) return;
+  const count = 30;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement("span");
+    p.style.setProperty("--x", `${Math.random() * 100}%`);
+    p.style.setProperty("--d", `${Math.random() * 1200}`);
+    p.style.setProperty("--delay", `${Math.random() * 1200}ms`);
+    container.appendChild(p);
+  }
+}
+
+function seedBurst(container) {
+  if (!container) return;
+  const rays = 24;
+  for (let i = 0; i < rays; i++) {
+    const r = document.createElement("i");
+    r.style.setProperty("--i", i);
+    container.appendChild(r);
+  }
+}
+
+function createMomentLayer(phrase) {
+  const layer = document.createElement("div");
+  layer.className = "momentLayer";
+  layer.innerHTML = `
+    <div class="momentDim"></div>
+    <div class="momentCenter">
+      <div class="momentGlow"></div>
+      <div class="rose3d">
+        <div class="roseStage">
+          <div class="stem3d"></div>
+          <div class="leaf3d left"></div>
+          <div class="leaf3d right"></div>
+          <div class="bloom3d">
+            ${Array.from({ length: 18 }).map((_, i) => {
+              const rot = i * (360 / 18);
+              const tilt = 10 + (i % 3) * 3;
+              const depth = 18 + i * 1.1;
+              const lift = -i * 1.2;
+              const scale = 1 - i * 0.015;
+              const yaw = i % 2 === 0 ? -5 : 5; // alternate slight yaw per petal for depth
+              return `<div class="petal3d" style="--i:${i};--rot:${rot}deg;--tilt:${tilt}deg;--depth:${depth}px;--lift:${lift}px;--scale:${scale};--yaw:${yaw}deg;"></div>`;
+            }).join("")}
+          </div>
+        </div>
+      </div>
+      <div class="momentText">${escapeHtml(phrase)}</div>
+      <div class="momentParticles"></div>
+      <div class="momentBurst"></div>
+    </div>
+  `;
+  seedParticles(layer.querySelector(".momentParticles"));
+  seedBurst(layer.querySelector(".momentBurst"));
+  return layer;
+}
+
+function showMoment(phrase) {
+  if (momentActive) return;
+  hideMoment();
+  momentActive = true;
+  momentEl = createMomentLayer(phrase);
+  document.body.appendChild(momentEl);
+  document.body.classList.add("moment-active");
+  if (typeof isMuted === "function" && typeof setMuted === "function") {
+    momentWasMuted = isMuted();
+    setMuted(true);
+  }
+  requestAnimationFrame(() => momentEl?.classList.add("on"));
+  momentTimers.push(setTimeout(() => momentEl?.classList.add("showText"), 3800));
+  momentTimers.push(setTimeout(() => {
+    momentEl?.classList.add("burst");
+    setTimeout(() => momentEl?.classList.remove("burst"), 900);
+  }, 4400));
+  if (momentAutoResetTimer) clearTimeout(momentAutoResetTimer);
+  momentAutoResetTimer = setTimeout(() => {
+    hideMoment();
+    if (typeof resetScenario === "function") resetScenario(activeScenarioId);
+  }, 6000);
+}
+
+function hideMoment() {
+  momentActive = false;
+  momentTimers.forEach(clearTimeout);
+  momentTimers = [];
+  if (momentAutoResetTimer) {
+    clearTimeout(momentAutoResetTimer);
+    momentAutoResetTimer = null;
+  }
+  if (momentWasMuted !== null && typeof setMuted === "function") {
+    setMuted(momentWasMuted);
+    momentWasMuted = null;
+  }
+  const el = momentEl || document.querySelector(".momentLayer");
+  if (!el) {
+    document.body.classList.remove("moment-active");
+    return;
+  }
+  el.classList.remove("on", "showText", "burst");
+  setTimeout(() => {
+    el.remove();
+    if (!document.querySelector(".momentLayer")) {
+      document.body.classList.remove("moment-active");
+    }
+    if (el === momentEl) momentEl = null;
+  }, 250);
+}
+
+// Math-based petal generator: builds a closed path from a polar curve
+// r(θ) = a * sin(kθ) with shaping; converted to SVG points and smoothed
+function makePetalPath(cx, cy, a, k, rotRad, squishX, squishY) {
+  const pts = [];
+  const steps = 140;
+  for (let i = 0; i <= steps; i++) {
+    const t = (i / steps) * Math.PI; // half turn gives petal-like loop
+    // Base rose-curve radius (always positive here)
+    let r = a * Math.sin(k * t);
+    r = Math.pow(Math.max(0, r), 0.72) * a; // soften + add volume
+
+    // Convert polar to cartesian (petal points upward)
+    const x0 = r * Math.cos(t);
+    const y0 = -r * Math.sin(t);
+
+    // Squish for realism
+    let x = x0 * squishX;
+    let y = y0 * squishY;
+
+    // Rotate around origin
+    const xr = x * Math.cos(rotRad) - y * Math.sin(rotRad);
+    const yr = x * Math.sin(rotRad) + y * Math.cos(rotRad);
+
+    pts.push([cx + xr, cy + yr]);
+  }
+
+  // Simple smoothing: quadratic through points
+  let d = `M ${pts[0][0].toFixed(2)} ${pts[0][1].toFixed(2)}`;
+  for (let i = 1; i < pts.length - 1; i++) {
+    const mx = (pts[i][0] + pts[i + 1][0]) / 2;
+    const my = (pts[i][1] + pts[i + 1][1]) / 2;
+    d += ` Q ${pts[i][0].toFixed(2)} ${pts[i][1].toFixed(2)} ${mx.toFixed(2)} ${my.toFixed(2)}`;
+  }
+  d += " Z";
+  return d;
+}
+
+function createRoseSvg() {
+  const ns = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(ns, "svg");
+  svg.setAttribute("class", "roseSvg");
+  svg.setAttribute("viewBox", "0 0 420 520");
+
+  // defs: gradients + subtle grain + soft light
+  const defs = document.createElementNS(ns, "defs");
+  defs.innerHTML = `
+    <linearGradient id="stemG" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3a9b46"/>
+      <stop offset="100%" stop-color="#1f6d2b"/>
+    </linearGradient>
+    <radialGradient id="leafG" cx="30%" cy="30%" r="80%">
+      <stop offset="0%" stop-color="#57c66a"/>
+      <stop offset="60%" stop-color="#2f9b45"/>
+      <stop offset="100%" stop-color="#1f6d2b"/>
+    </radialGradient>
+    <radialGradient id="petalG" cx="30%" cy="25%" r="85%">
+      <stop offset="0%" stop-color="#ffd1dc" stop-opacity="0.85"/>
+      <stop offset="35%" stop-color="#ff5b8d"/>
+      <stop offset="75%" stop-color="#c2185b"/>
+      <stop offset="100%" stop-color="#7b103d"/>
+    </radialGradient>
+    <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="0.8" result="b"/>
+      <feColorMatrix type="matrix" values="
+        1 0 0 0 0
+        0 1 0 0 0
+        0 0 1 0 0
+        0 0 0 0.92 0" />
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  `;
+  svg.appendChild(defs);
+
+  // Stem (drawn)
+  const stem = document.createElementNS(ns, "path");
+  stem.setAttribute("class", "stemPath");
+  stem.setAttribute("d", "M 210 500 C 210 440 205 385 210 330 C 215 275 230 245 220 200 C 214 170 210 150 210 130");
+  stem.setAttribute("fill", "none");
+  stem.setAttribute("stroke", "url(#stemG)");
+  stem.setAttribute("stroke-width", "8");
+  stem.setAttribute("stroke-linecap", "round");
+  stem.setAttribute("filter", "url(#soft)");
+  svg.appendChild(stem);
+
+  // Leaves group
+  const leafGroup = document.createElementNS(ns, "g");
+  leafGroup.setAttribute("class", "leafGroup");
+  leafGroup.innerHTML = `
+    <path d="M 210 355 C 175 350 155 330 145 305 C 165 305 190 312 210 330 C 220 338 225 347 210 355 Z"
+      fill="url(#leafG)" filter="url(#soft)" opacity="0.95"/>
+    <path d="M 214 320 C 250 315 275 295 290 270 C 268 268 240 278 220 296 C 210 305 204 315 214 320 Z"
+      fill="url(#leafG)" filter="url(#soft)" opacity="0.95"/>
+  `;
+  svg.appendChild(leafGroup);
+
+  // Petals (math-generated)
+  const centerX = 210;
+  const centerY = 155;
+  const petalCount = 9;
+  for (let i = 0; i < petalCount; i++) {
+    const p = document.createElementNS(ns, "path");
+    p.setAttribute("class", "petal");
+    p.dataset.i = String(i);
+
+    // Vary petal parameters for realism
+    const a = 92 - i * 6;
+    const k = 2 + (i % 3) * 0.25;
+    const rot = (i * (Math.PI * 2)) / petalCount + (i % 2 ? 0.12 : -0.08);
+    const sx =     1.0 - i * 0.03;
+    const sy = 1.12 - i * 0.02;
+    const d = makePetalPath(centerX, centerY, a, k, rot, sx, sy);
+    p.setAttribute("d", d);
+    p.setAttribute("fill", "url(#petalG)");
+    p.setAttribute("filter", "url(#soft)");
+    p.style.setProperty("--r", `${(i - 4) * 10}deg`);
+    p.style.opacity = "0";
+    svg.appendChild(p);
+  }
+
+  // Bud highlight (tiny)
+  const bud = document.createElementNS(ns, "circle");
+  bud.setAttribute("cx", "210");
+  bud.setAttribute("cy", "155");
+  bud.setAttribute("r", "10");
+  bud.setAttribute("fill", "rgba(255,255,255,0.12)");
+  bud.setAttribute("filter", "url(#soft)");
+  svg.appendChild(bud);
+
+  return svg;
+}
+
+function createParticles(layer, countSpark = 22, countHeart = 10) {
+  // sparkles
+  for (let i = 0; i < countSpark; i++) {
+    const s = document.createElement("i");
+    s.className = "spark";
+    const x = Math.random() * 100;
+    const y = Math.random() * 100;
+    const d = 1200 + Math.random() * 1400;
+    const delay = Math.random() * 900;
+    s.style.left = `${x}%`;
+    s.style.top = `${y}%`;
+    s.style.animationDuration = `${d}ms`;
+    s.style.animationDelay = `${delay}ms`;
+    layer.appendChild(s);
+  }
+
+  // hearts
+  for (let i = 0; i < countHeart; i++) {
+    const h = document.createElement("i");
+    h.className = "heart";
+    const x = 15 + Math.random() * 70;
+    const y = 70 + Math.random() * 25;
+    const d = 2200 + Math.random() * 1600;
+    const delay = 300 + Math.random() * 1400;
+    h.style.left = `${x}%`;
+    h.style.top = `${y}%`;
+    h.style.animationDuration = `${d}ms`;
+    h.style.animationDelay = `${delay}ms`;
+    h.style.opacity = "0";
+    layer.appendChild(h);
+  }
+}
+
+function createBurst(layer, rays = 18) {
+  for (let i = 0; i < rays; i++) {
+    const r = document.createElement("i");
+    const a = (i / rays) * 360;
+    r.style.left = "50%";
+    r.style.top = "55%";
+    r.style.setProperty("--a", `${a}deg`);
+    layer.appendChild(r);
+  }
+}
+
+function clamp(n, a, b) { return Math.max(a, Math.min(b, n)); }
+function lerp(a, b, t) { return a + (b - a) * t; }
+function easeOutCubic(t){ return 1 - Math.pow(1 - t, 3); }
+function easeInOutCubic(t){ return t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+
+// --- Procedural rose renderer (Canvas) ---
+function renderRoseMoment(targetEl, phrase) {
+  clearRoseMoment(targetEl);
+
+  const root = document.createElement("section");
+  root.className = "moment";
+
+  const overlay = document.createElement("div");
+  overlay.className = "momentOverlay";
+
+  const inner = document.createElement("div");
+  inner.className = "momentInner";
+
+  const canvas = document.createElement("canvas");
+  canvas.className = "momentCanvas";
+
+  const text = document.createElement("div");
+  text.className = "momentText";
+  text.textContent = phrase;
+
+  inner.appendChild(canvas);
+  root.appendChild(overlay);
+  root.appendChild(inner);
+  root.appendChild(text);
+  targetEl.appendChild(root);
+  document.body.classList.add("moment-active");
+  const autoClearMs = 5000;
+
+  // Turn on overlay/canvas entrance
+  requestAnimationFrame(() => root.classList.add("isOn"));
+
+  // HiDPI sizing
+  function resize() {
+    const rect = inner.getBoundingClientRect();
+    const dpr = Math.max(1, Math.min(2.5, window.devicePixelRatio || 1));
+    canvas.width = Math.floor(rect.width * dpr);
+    canvas.height = Math.floor(rect.height * dpr);
+    canvas.dataset.dpr = String(dpr);
+  }
+  resize();
+  window.addEventListener("resize", resize, { passive: true });
+
+  const ctx = canvas.getContext("2d");
+  const dpr = Number(canvas.dataset.dpr || 1);
+
+  // Scene parameters
+  const W = () => canvas.width;
+  const H = () => canvas.height;
+
+  // Particles (bokeh + hearts)
+  const particles = [];
+  const particleCount = 34;
+  for (let i = 0; i < particleCount; i++) {
+    particles.push({
+      x: Math.random(),
+      y: 0.55 + Math.random() * 0.4,
+      r: 0.006 + Math.random() * 0.018,
+      sp: 0.00012 + Math.random() * 0.00026,
+      phase: Math.random() * Math.PI * 2,
+      kind: Math.random() < 0.25 ? "heart" : "bokeh"
+    });
+  }
+
+  // A simple burst rays effect
+  let burstOn = false;
+  let burstT = 0;
+  const burstSchedule = [3200, 4600, 5400];
+
+  // Timing
+  const t0 = performance.now();
+  const durStem = 1600;
+  const durLeaves = 900;
+  const durBloom = 2100;
+  const showTextAt = 3900;
+
+  // Rose placement
+  function getAnchor() {
+    const w = W(), h = H();
+    return {
+      cx: w * 0.5,
+      cy: h * 0.62,
+      bloomX: w * 0.5,
+      bloomY: h * 0.30
+    };
+  }
+
+  // Stem curve (cubic bezier points)
+  function stemPoint(s, a) {
+    // s: 0..1
+    const { cx, cy, bloomY } = a;
+    const y0 = cy;
+    const y1 = bloomY + (cy - bloomY) * 0.10;
+    // slight sway
+    const sway = Math.sin(s * 2.6) * (W() * 0.012);
+    const x = cx + sway;
+    const y = lerp(y0, y1, s);
+    return { x, y };
+  }
+
+  function drawBackgroundGlow() {
+    const w = W(), h = H();
+    ctx.save();
+    ctx.clearRect(0, 0, w, h);
+    // base tint
+    ctx.fillStyle = "rgba(26, 6, 30, 0.45)";
+    ctx.fillRect(0, 0, w, h);
+    // dark vignette + soft pink center glow
+    const g1 = ctx.createRadialGradient(w*0.5, h*0.55, w*0.05, w*0.5, h*0.55, w*0.65);
+    g1.addColorStop(0, "rgba(255,105,180,0.20)");
+    g1.addColorStop(0.55, "rgba(255,105,180,0.10)");
+    g1.addColorStop(1, "rgba(255,105,180,0.02)");
+    ctx.fillStyle = g1;
+    ctx.fillRect(0,0,w,h);
+    ctx.restore();
+  }
+
+  function drawParticles(time) {
+    const w = W(), h = H();
+    ctx.save();
+    for (const p of particles) {
+      p.y -= p.sp;
+      p.phase += 0.012;
+      if (p.y < -0.2) { p.y = 1.05; p.x = Math.random(); }
+
+      const x = p.x * w + Math.sin(p.phase) * w * 0.01;
+      const y = p.y * h;
+      const r = p.r * w;
+
+      if (p.kind === "bokeh") {
+        const g = ctx.createRadialGradient(x, y, 0, x, y, r);
+        g.addColorStop(0, "rgba(255,255,255,0.20)");
+        g.addColorStop(0.35, "rgba(255,105,180,0.18)");
+        g.addColorStop(1, "rgba(255,105,180,0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI*2);
+        ctx.fill();
+      } else {
+        // tiny heart
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Math.PI/4);
+        const s = r * 0.55;
+        const g = ctx.createRadialGradient(0,0,0, 0,0, s*2);
+        g.addColorStop(0, "rgba(255,255,255,0.25)");
+        g.addColorStop(0.35, "rgba(255,105,180,0.78)");
+        g.addColorStop(1, "rgba(255,105,180,0)");
+        ctx.fillStyle = g;
+        ctx.globalAlpha = 0.9;
+        ctx.beginPath();
+        ctx.arc(-s*0.6, 0, s, 0, Math.PI*2);
+        ctx.arc( s*0.6, 0, s, 0, Math.PI*2);
+        ctx.moveTo(-s*1.4, 0);
+        ctx.lineTo(0, s*2.2);
+        ctx.lineTo(s*1.4, 0);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+    ctx.restore();
+  }
+
+  function drawStem(progress) {
+    const a = getAnchor();
+    const w = W();
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    // stem gradient
+    const p0 = stemPoint(0, a);
+    const p1 = stemPoint(1, a);
+    const g = ctx.createLinearGradient(p0.x, p0.y, p1.x, p1.y);
+    g.addColorStop(0, "#1f6d2b");
+    g.addColorStop(0.55, "#2f9b45");
+    g.addColorStop(1, "#1b5e20");
+
+    const n = 80;
+    ctx.strokeStyle = g;
+    ctx.lineWidth = w * 0.012;
+    ctx.shadowColor = "rgba(0,0,0,0.35)";
+    ctx.shadowBlur = w * 0.02;
+
+    ctx.beginPath();
+    for (let i = 0; i <= n; i++) {
+      const s = (i / n) * progress;
+      const pt = stemPoint(s, a);
+      if (i === 0) ctx.moveTo(pt.x, pt.y);
+      else ctx.lineTo(pt.x, pt.y);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  function drawLeaf(x, y, scale, flip) {
+    const w = W();
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(flip ? -1 : 1, 1);
+    ctx.rotate(flip ? -0.45 : 0.35);
+    ctx.scale(scale, scale);
+
+    const g = ctx.createRadialGradient(-10, -10, 1, 0, 0, 80);
+    g.addColorStop(0, "#57c66a");
+    g.addColorStop(0.55, "#2f9b45");
+    g.addColorStop(1, "#1b5e20");
+    ctx.fillStyle = g;
+    ctx.globalAlpha = 0.95;
+    ctx.beginPath();
+    // leaf shape (bezier)
+    ctx.moveTo(0, 0);
+    ctx.bezierCurveTo(35, -20, 70, -8, 88, 18);
+    ctx.bezierCurveTo(62, 28, 32, 24, 0, 0);
+    ctx.closePath();
+    ctx.fill();
+
+    // vein highlight
+    ctx.strokeStyle = "rgba(255,255,255,0.18)";
+    ctx.lineWidth = w * 0.0025;
+    ctx.beginPath();
+    ctx.moveTo(6, 2);
+    ctx.quadraticCurveTo(40, 8, 78, 16);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function drawLeaves(progress) {
+    const a = getAnchor();
+    const pMid1 = stemPoint(0.48, a);
+    const pMid2 = stemPoint(0.62, a);
+    const s = easeOutCubic(progress);
+    drawLeaf(pMid1.x - W()*0.02, pMid1.y, 0.55*s, true);
+    drawLeaf(pMid2.x + W()*0.02, pMid2.y, 0.58*s, false);
+  }
+
+  // Petal polar curve with shading; layered petals with rotation
+  function petalPolar(theta, a, k) {
+    // base rose curve, shaped for petal volume
+    let r = a * Math.sin(k * theta);
+    r = Math.max(0, r);
+    r = Math.pow(r, 0.72);
+    return r;
+  }
+
+  function drawPetal(cx, cy, baseR, rot, open, depth) {
+    const w = W();
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(rot);
+
+    // color shade by depth
+    const shade = clamp(0.92 - depth*0.05, 0.62, 0.96);
+    const g = ctx.createRadialGradient(-w*0.018, -w*0.028, w*0.006, 0, 0, baseR*1.42);
+    g.addColorStop(0, `rgba(255, 235, 244, ${0.82*shade})`);
+    g.addColorStop(0.32, `rgba(255, 140, 182, ${0.95*shade})`);
+    g.addColorStop(0.62, `rgba(214, 52, 104, ${0.94*shade})`);
+    g.addColorStop(0.86, `rgba(150, 20, 70, ${0.9*shade})`);
+    g.addColorStop(1, `rgba(90, 8, 38, ${0.88*shade})`);
+
+    ctx.fillStyle = g;
+    ctx.shadowColor = "rgba(0,0,0,0.28)";
+    ctx.shadowBlur = w * 0.02;
+
+    const steps = 180;
+    ctx.beginPath();
+    for (let i = 0; i <= steps; i++) {
+      const t = (i / steps) * Math.PI; // half loop makes a petal
+      const r = petalPolar(t, baseR * open, 2.1) * baseR;
+      const x = (r * Math.cos(t)) * (1.0 - depth*0.02);
+      const y = (-r * Math.sin(t)) * (1.18 - depth*0.02);
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.fill();
+
+    // highlight edge + subtle vein
+    ctx.strokeStyle = "rgba(255,255,255,0.16)";
+    ctx.lineWidth = w * 0.0016;
+    ctx.stroke();
+
+    // inner vein glow for volume
+    const vein = ctx.createLinearGradient(-baseR*0.18, -baseR*0.1, baseR*0.22, baseR*0.36);
+    vein.addColorStop(0, "rgba(255,255,255,0.08)");
+    vein.addColorStop(0.5, "rgba(255,180,200,0.16)");
+    vein.addColorStop(1, "rgba(90,0,20,0)");
+    ctx.globalAlpha = 0.7;
+    ctx.fillStyle = vein;
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    ctx.restore();
+  }
+
+  function drawBloom(progress) {
+    const a = getAnchor();
+    const t = easeInOutCubic(progress);
+    const cx = a.bloomX;
+    const cy = a.bloomY;
+
+    // bloom opening amount
+    const outerOpen = lerp(0.55, 0.92, t);
+    const innerOpen = lerp(0.38, 0.74, t);
+
+    // Outer ring: broader petals with slight wobble
+    const outerCount = 14;
+    for (let i = outerCount - 1; i >= 0; i--) {
+      const depth = i * 0.7;
+      const rot = (i * (Math.PI * 2)) / outerCount + Math.sin(i * 1.3) * 0.08;
+      const baseR = W() * 0.07 + (outerCount - i) * (W() * 0.0045);
+      drawPetal(cx, cy, baseR, rot, outerOpen, depth);
+    }
+
+    // Inner ring: tighter petals to close the center
+    const innerCount = 10;
+    for (let i = innerCount - 1; i >= 0; i--) {
+      const depth = 6 + i * 0.85;
+      const rot = (i * (Math.PI * 2)) / innerCount + 0.35 + Math.sin(i * 2.1) * 0.05;
+      const baseR = W() * 0.048 + (innerCount - i) * (W() * 0.0032);
+      drawPetal(cx, cy, baseR, rot, innerOpen, depth);
+    }
+
+    // bud core glow
+    ctx.save();
+    const r0 = W()*0.028;
+    const gCore = ctx.createRadialGradient(cx, cy, 0, cx, cy, r0*2.8);
+    gCore.addColorStop(0, "rgba(255,240,245,0.35)");
+    gCore.addColorStop(0.35, "rgba(255,140,180,0.32)");
+    gCore.addColorStop(0.7, "rgba(120,10,40,0.42)");
+    gCore.addColorStop(1, "rgba(40,2,14,0.6)");
+    ctx.fillStyle = gCore;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r0*2.4, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  function drawBurst() {
+    if (!burstOn) return;
+    const w = W(), h = H();
+    const a = getAnchor();
+    const cx = a.bloomX, cy = a.bloomY + h*0.02;
+    const t = easeOutCubic(clamp(burstT, 0, 1));
+
+    ctx.save();
+    ctx.globalAlpha = 1 - t;
+    const rays = 28;
+    for (let i = 0; i < rays; i++) {
+      const ang = (i / rays) * Math.PI * 2;
+      const len = lerp(w*0.03, w*0.16, t);
+      const x2 = cx + Math.cos(ang) * len;
+      const y2 = cy + Math.sin(ang) * len;
+      const grad = ctx.createLinearGradient(cx, cy, x2, y2);
+      grad.addColorStop(0, "rgba(255,255,255,0.95)");
+      grad.addColorStop(1, "rgba(255,105,180,0.0)");
+      ctx.strokeStyle = grad;
+      ctx.lineWidth = w*0.0032;
+      ctx.beginPath();
+      ctx.moveTo(cx, cy);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  let raf = 0;
+  function frame(now) {
+    const t = now - t0;
+    const stemP = clamp(t / durStem, 0, 1);
+    const leafP = clamp((t - 900) / durLeaves, 0, 1);
+    const bloomP = clamp((t - 1400) / durBloom, 0, 1);
+
+    drawBackgroundGlow();
+    drawParticles(t);
+    drawStem(easeOutCubic(stemP));
+    if (leafP > 0) drawLeaves(leafP);
+    if (bloomP > 0) drawBloom(bloomP);
+
+    if (t >= showTextAt) root.classList.add("showText");
+    if (!burstOn && burstSchedule.length && t >= burstSchedule[0]) {
+      burstOn = true;
+      burstT = 0;
+      burstSchedule.shift();
+    }
+    if (burstOn) { burstT += 0.03; drawBurst(); if (burstT >= 1) burstOn = false; }
+
+    raf = requestAnimationFrame(frame);
+  }
+  raf = requestAnimationFrame(frame);
+
+  // Auto-dismiss after a brief showcase
+  const autoTimer = window.setTimeout(() => {
+    root.classList.add("fadeOut");
+    window.setTimeout(() => clearRoseMoment(targetEl), 600);
+  }, autoClearMs);
+
+  // Store cleanup hooks on element
+  root._momentCleanup = () => {
+    cancelAnimationFrame(raf);
+    window.removeEventListener("resize", resize);
+    window.clearTimeout(autoTimer);
+    root.remove();
+    if (!document.querySelector(".moment")) {
+      document.body.classList.remove("moment-active");
+    }
+  };
+
+  return root;
+}
+
+function clearRoseMoment(targetEl) {
+  const existing = targetEl.querySelectorAll(".moment");
+  existing.forEach(el => {
+    if (typeof el._momentCleanup === "function") el._momentCleanup();
+    else el.remove();
+  });
+  if (!document.querySelector(".moment")) {
+    document.body.classList.remove("moment-active");
+  }
+}
+
+// Main: render cinematic reward under completion area
+function renderRewardScene(container, phrase) {
+  // container: element under the game completion UI
+  // phrase: string to show after bloom
+  const scene = document.createElement("section");
+  scene.className = "rewardScene";
+
+  const backdrop = document.createElement("div");
+  backdrop.className = "rewardBackdrop";
+
+  const inner = document.createElement("div");
+  inner.className = "rewardInner";
+
+  const glow = document.createElement("div");
+  glow.className = "rewardGlow";
+
+  const particles = document.createElement("div");
+  particles.className = "particles";
+  createParticles(particles);
+
+  const burst = document.createElement("div");
+  burst.className = "burst";
+  createBurst(burst);
+
+  const svg = createRoseSvg();
+
+  const text = document.createElement("div");
+  text.className = "rewardText";
+  text.textContent = phrase;
+
+  inner.appendChild(glow);
+  inner.appendChild(particles);
+  inner.appendChild(burst);
+  inner.appendChild(svg);
+
+  scene.appendChild(backdrop);
+  scene.appendChild(inner);
+  scene.appendChild(text);
+
+  container.appendChild(scene);
+
+  // start sequence
+  requestAnimationFrame(() => scene.classList.add("isOn"));
+
+  // show phrase after bloom completes
+  window.setTimeout(() => {
+    scene.classList.add("showText");
+  }, 3300);
+
+  // cheerful burst right after phrase appears
+  window.setTimeout(() => {
+    scene.classList.add("burstOn");
+    window.setTimeout(() => scene.classList.remove("burstOn"), 900);
+  }, 4000);
+
+  return scene;
+}
+function buildRose(container) {
+  const rose = document.createElement("div");
+  rose.className = "rose";
+
+  rose.innerHTML = `
+    <div class="stem"></div>
+    <div class="leaf left"></div>
+    <div class="leaf right"></div>
+    <div class="bloom">
+      <div class="petal p1"></div>
+      <div class="petal p2"></div>
+      <div class="petal p3"></div>
+      <div class="petal p4"></div>
+      <div class="petal p5"></div>
+    </div>
+  `;
+
+  container.appendChild(rose);
+
+  requestAnimationFrame(() => {
+    rose.classList.add("grow");
+  });
+}
+
+function pickRandom(arr) {
+  if (!Array.isArray(arr) || arr.length === 0) return "";
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function getCompletionMessage(sc, score) {
+  const rewardUnlocked = score >= 6;
+  if (rewardUnlocked) return { message: sc.reward, rewardUnlocked: true };
+
+  const tier = score <= 3 ? sc.completionText?.low : sc.completionText?.mid;
+  const pool = Array.isArray(tier) && tier.length ? tier : [""];
+  return { message: pickRandom(pool), rewardUnlocked: false };
+}
+
+function ensureScenarioState(id) {
+  if (!scenarioState[id]) {
+    scenarioState[id] = {
+      currentStepIndex: 0,
+      score: 0,
+      selections: new Array(7).fill(null),
+      isComplete: false,
+      rewardUnlocked: false,
+      roseRendered: false,
+      rewardRendered: false,
+      momentRendered: false,
+    };
+  }
+  return scenarioState[id];
+}
+
+function getActiveScenario() {
+  return scenarios.find((s) => s.id === activeScenarioId) || scenarios[0];
+}
+
+function renderScenarioButtons() {
+  if (!choiceEls.list) return;
+  choiceEls.list.innerHTML = "";
+  scenarios.forEach((sc) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `scenarioBtn${sc.id === activeScenarioId ? " is-active" : ""}`;
+    btn.textContent = sc.label;
+    btn.addEventListener("click", () => {
+      activeScenarioId = sc.id;
+      ensureScenarioState(sc.id);
+      renderScenarioButtons();
+      resetScenario(sc.id, false);
+    });
+    choiceEls.list.appendChild(btn);
+  });
+}
+
+function setFeedback(text) {
+  if (choiceEls.feedback) choiceEls.feedback.textContent = text || "";
+}
+
+function updateStatus() {
+  const sc = getActiveScenario();
+  const state = ensureScenarioState(sc.id);
+  if (choiceEls.status) {
+    choiceEls.status.textContent = `${sc.label} · Score ${state.score}/7` + (state.isComplete ? " · Complete" : "");
+  }
+}
+
+function renderStep() {
+  const sc = getActiveScenario();
+  const state = ensureScenarioState(sc.id);
+  const step = sc.steps[state.currentStepIndex];
+  if (!step) return;
+
+  if (choiceEls.prompt) choiceEls.prompt.textContent = step.prompt;
+  setFeedback("");
+
+  if (choiceEls.progressText) {
+    choiceEls.progressText.textContent = `Step ${state.currentStepIndex + 1} of ${sc.steps.length}`;
+  }
+  if (choiceEls.progressBar) {
+    const pct = ((state.currentStepIndex) / sc.steps.length) * 100;
+    choiceEls.progressBar.style.width = `${pct}%`;
+  }
+
+  if (choiceEls.options) {
+    choiceEls.options.innerHTML = "";
+    step.options.forEach((opt, idx) => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "choiceOption";
+      btn.textContent = opt.text;
+      if (state.selections[state.currentStepIndex] !== null) btn.disabled = true;
+      btn.addEventListener("click", () => handleOptionSelect(idx));
+      choiceEls.options.appendChild(btn);
+    });
+  }
+
+  if (choiceEls.next) {
+    choiceEls.next.disabled = true;
+    choiceEls.next.textContent = state.currentStepIndex === sc.steps.length - 1 ? "Finish" : "Continue";
+  }
+
+  if (choiceEls.summary) {
+    choiceEls.summary.textContent = state.isComplete ? "Run complete. Try again for a perfect score to unlock the reward." : "";
+  }
+
+  updateStatus();
+}
+
+function handleOptionSelect(optionIndex) {
+  const sc = getActiveScenario();
+  const state = ensureScenarioState(sc.id);
+  if (state.isComplete) return;
+  if (state.selections[state.currentStepIndex] !== null) return;
+
+  const step = sc.steps[state.currentStepIndex];
+  const opt = step.options[optionIndex];
+  state.selections[state.currentStepIndex] = optionIndex;
+  if (opt.isOptimal) state.score += 1;
+
+  if (choiceEls.options) {
+    choiceEls.options.querySelectorAll(".choiceOption").forEach((btn, idx) => {
+      btn.disabled = true;
+      if (idx === optionIndex) btn.classList.add("is-selected");
+      if (idx === optionIndex && opt.isOptimal) btn.classList.add("is-correct");
+      if (idx === optionIndex && !opt.isOptimal) btn.classList.add("is-wrong");
+    });
+  }
+
+  setFeedback(opt.feedback);
+
+  if (choiceEls.next) {
+    choiceEls.next.disabled = false;
+    choiceEls.next.textContent = state.currentStepIndex === sc.steps.length - 1 ? "Finish" : "Continue";
+  }
+  updateStatus();
+}
+
+function goNextStep() {
+  const sc = getActiveScenario();
+  const state = ensureScenarioState(sc.id);
+  if (state.selections[state.currentStepIndex] === null) return;
+  const isLast = state.currentStepIndex === sc.steps.length - 1;
+  if (isLast) {
+    finalizeScenario();
+  } else {
+    state.currentStepIndex += 1;
+    renderStep();
+  }
+}
+
+function finalizeScenario() {
+  const sc = getActiveScenario();
+  const state = ensureScenarioState(sc.id);
+  state.isComplete = true;
+
+  const result = getCompletionMessage(sc, state.score);
+  state.rewardUnlocked = result.rewardUnlocked;
+
+  if (state.rewardUnlocked && !state.momentRendered) {
+    showMoment(sc.reward);
+    state.momentRendered = true;
+  }
+
+  if (choiceEls.progressBar) choiceEls.progressBar.style.width = "100%";
+  if (choiceEls.next) {
+    choiceEls.next.disabled = true;
+    choiceEls.next.textContent = "Complete";
+  }
+  if (choiceEls.summary) {
+    choiceEls.summary.textContent = result.message || "";
+  }
+  updateStatus();
+}
+
+function resetScenario(id = activeScenarioId, rerenderButtons = true) {
+  ensureScenarioState(id);
+  scenarioState[id].currentStepIndex = 0;
+  scenarioState[id].score = 0;
+  scenarioState[id].selections = new Array(7).fill(null);
+  scenarioState[id].isComplete = false;
+  scenarioState[id].rewardUnlocked = false;
+  scenarioState[id].roseRendered = false;
+  scenarioState[id].rewardRendered = false;
+  scenarioState[id].momentRendered = false;
+  hideMoment();
+  closeDiagnosisModal();
+  if (choiceEls.wrap) {
+    choiceEls.wrap.querySelectorAll(".rose").forEach((node) => node.remove());
+    choiceEls.wrap.querySelectorAll(".rewardScene").forEach((node) => node.remove());
+  }
+  if (choiceEls.completion) choiceEls.completion.innerHTML = "";
+  if (rerenderButtons) renderScenarioButtons();
+  renderStep();
+}
+
+function initChoiceGame() {
+  if (!choiceEls.wrap || !scenarios.length) return;
+  renderScenarioButtons();
+  resetScenario(activeScenarioId, false);
+  choiceEls.next?.addEventListener("click", goNextStep);
+  choiceEls.restart?.addEventListener("click", () => resetScenario(activeScenarioId));
+}
+
+initChoiceGame();

@@ -42,6 +42,7 @@
       <a href="#moments">Moments</a>
       <a href="#letter">Letter</a>
       <a href="#gallery">Gallery</a>
+      <a href="#choice-game">Choices</a>
       <a href="#romantic-garden">Romantic Garden</a>
       <a href="#finale" class="nav__cta">For Yasmeen ✦</a>
       <div class="musicMenu" id="musicMenu">
@@ -253,6 +254,44 @@
               <h3>Rose Neon</h3>
               <p>Romance, but elevated.</p>
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- INTERACTIVE CHOICES -->
+    <section id="choice-game" class="section">
+      <div class="container">
+        <div class="sectionHead reveal">
+          <h2>Choose The Path</h2>
+          <p>Four scenarios, seven steps each. Pick carefully to unlock the final reward.</p>
+        </div>
+
+        <div class="glassCard choiceGame reveal" id="choiceGame">
+          <div class="choiceGame__top">
+            <div class="choiceGame__scenarios" id="scenarioList" aria-label="Scenarios"></div>
+            <div class="choiceGame__controls">
+              <span class="choiceGame__status" id="gameStatus"></span>
+              <button class="btn btn--ghost" id="restartScenario" type="button">Restart</button>
+            </div>
+          </div>
+
+          <div class="choiceGame__progress" aria-hidden="true">
+            <div class="choiceGame__progressTrack">
+              <div class="choiceGame__progressBar" id="gameProgressBar"></div>
+            </div>
+            <span class="choiceGame__progressText" id="gameProgressText">Step 1 of 7</span>
+          </div>
+
+          <div class="choiceGame__body">
+            <div class="choiceGame__prompt" id="gamePrompt"></div>
+            <div class="choiceGame__options" id="gameOptions"></div>
+            <div class="choiceGame__feedback" id="gameFeedback" aria-live="polite"></div>
+            <div class="choiceGame__actions">
+              <button class="btn btn--primary" id="nextStep" type="button" disabled>Continue</button>
+            </div>
+            <div class="choiceGame__summary" id="gameSummary"></div>
+            <div id="completionSection"></div>
           </div>
         </div>
       </div>
