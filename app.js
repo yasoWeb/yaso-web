@@ -247,10 +247,36 @@ const PHRASES = [
     {
       id: "softPose",
       title: "Soft Pose",
-      caption: "A pose that kills me everytime. So soft, so elegant, so you.",
+      caption: `A pose that kills me everytime. 
+      So soft, so elegant, so you.
+      Softness is her superpower.`,
       src: "./assets/killMe.jpeg",
       alt: "Soft pose",
       themeColor: "#b08aff"
+    },
+    {
+      id: "victoriaModel",
+      title: "Elegant Model",
+      caption: "An elegant model too sad for Victoria's Secret. The world is missing out.",
+      src: "./assets/victoriaModel.jpeg",
+      alt: "Elegant model",
+      themeColor: "#ffb87a",
+    },
+    {
+      id: "mirror",
+      title: "Mirror Reflection",
+      caption: "A beautiful reflection that captures both outer elegance and inner grace. Sometimes I get jealous of your mirror.",
+      src: "./assets/mirror.jpeg",
+      alt: "Mirror reflection",
+      themeColor: "#a0c4ff"
+    },
+    {
+      id: "devil",
+      title: "Cute Devil",
+      caption: "A cute devilish look that’s both playful and captivating. Mischievous yet utterly charming.",
+      src: "./assets/devil.jpeg",
+      alt: "Cute devilish look",
+      themeColor: "#ff6961"
     }
   ];
 
