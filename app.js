@@ -274,7 +274,7 @@ const PHRASES = [
       id: "devil",
       title: "Cute Devil",
       caption: "A cute devilish look that’s both playful and captivating. Mischievous yet utterly charming.",
-      src: "./assets/devil.jpeg",
+      src: "./assets/Devil.jpeg",
       alt: "Cute devilish look",
       themeColor: "#ff6961"
     }
