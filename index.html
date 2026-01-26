@@ -124,12 +124,20 @@
           <p>Elegant. Kind. Unmatched.</p>
         </div>
 
-        <div class="grid2">
+        <div class="grid3">
           <div class="glassCard reveal">
             <h3 class="glassCard__title">The Aura</h3>
             <p class="glassCard__text">
               Yasmeen has that rare energy: calm confidence, warm presence,
               and a style that feels effortless.
+            </p>
+          </div>
+
+          <div class="glassCard reveal">
+            <h3 class="glassCard__title">The Present</h3>
+            <p class="glassCard__text">
+              She shows up fully, right now. She doesn't defer joy or connection—
+              she lives it as it arrives. Every moment with her feels like it matters.
             </p>
           </div>
 
@@ -228,33 +236,11 @@
       <div class="container">
         <div class="sectionHead reveal">
           <h2>Gallery</h2>
-          <p>Add photos later (kept as placeholders for now).</p>
+          <p>This gallery showcases beauty frozen in time. Where memories come alive through images.</p>
         </div>
 
-        <div class="gallery">
-          <div class="gCard reveal">
-            <div class="gImg g1" role="img" aria-label="Placeholder image 1"></div>
-            <div class="gText">
-              <h3>Starlight Mood</h3>
-              <p>Classy, sweet, romantic.</p>
-            </div>
-          </div>
-
-          <div class="gCard reveal">
-            <div class="gImg g2" role="img" aria-label="Placeholder image 2"></div>
-            <div class="gText">
-              <h3>Aurora Glow</h3>
-              <p>Soft, cute, glowing.</p>
-            </div>
-          </div>
-
-          <div class="gCard reveal">
-            <div class="gImg g3" role="img" aria-label="Placeholder image 3"></div>
-            <div class="gText">
-              <h3>Rose Neon</h3>
-              <p>Romance, but elevated.</p>
-            </div>
-          </div>
+        <div class="gallery" id="galleryContainer">
+          <!-- Populated dynamically by app.js using ./assets/* images -->
         </div>
       </div>
     </section>
@@ -288,6 +274,7 @@
             <div class="choiceGame__options" id="gameOptions"></div>
             <div class="choiceGame__feedback" id="gameFeedback" aria-live="polite"></div>
             <div class="choiceGame__actions">
+              <button class="btn btn--secondary" id="reconsiderBtn" type="button" style="display: none;">Reconsider</button>
               <button class="btn btn--primary" id="nextStep" type="button" disabled>Continue</button>
             </div>
             <div class="choiceGame__summary" id="gameSummary"></div>
@@ -295,18 +282,6 @@
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- ROMANTIC GARDEN -->
-    <section id="romantic-garden" class="section">
-      <div class="container">
-        <div class="sectionHead reveal">
-          <h2>Romantic Garden</h2>
-          <p>This garden is different grows into your Admiration. Hover, or tap blooms to take on and stream a soft line for you sweetheart.</p>
-        </div>
-      </div>
-      <!-- Full-width garden anchored stable under this section -->
-      <div class="garden" aria-label="Romantic Garden"></div>
     </section>
 
     <!-- FINALE -->
@@ -321,6 +296,18 @@
           <a class="btn btn--primary" href="#top">Back to the Top</a>
         </div>
       </div>
+    </section>
+
+    <!-- ROMANTIC GARDEN -->
+    <section id="romantic-garden" class="section">
+      <div class="container">
+        <div class="sectionHead reveal">
+          <h2>Romantic Garden</h2>
+          <p>This garden is different grows into your Admiration. Hover, or tap blooms to take on and stream a soft line for you sweetheart.</p>
+        </div>
+      </div>
+      <!-- Full-width garden anchored stable under this section -->
+      <div class="garden" aria-label="Romantic Garden"></div>
     </section>
   </main>
 

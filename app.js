@@ -226,24 +226,200 @@ const PHRASES = [
 ];
 
 
-const garden = document.querySelector(".garden");
+  // ===== Gallery Images Management =====
+  const GALLERY_IMAGES = [
+    {
+      id: "fabulous",
+      title: "Fabulous",
+      caption: "A stunning portrait radiating confidence and grace. Well dressed, poised, and absolutely fabulous.",
+      src: "./assets/fabulous.jpeg",
+      alt: "Fabulous portrait",
+      themeColor: "#ff7fb6"
+    },
+    {
+      id: "greatSmile",
+      title: "Great Smile",
+      caption: "Timeless, radiant smile, that sparks my heart. NEVER LOSE IT.",
+      src: "./assets/greatSmile.jpeg",
+      alt: "Bright smile",
+      themeColor: "#7fffd4"
+    },
+    {
+      id: "softPose",
+      title: "Soft Pose",
+      caption: "A pose that kills me everytime. So soft, so elegant, so you.",
+      src: "./assets/killMe.jpeg",
+      alt: "Soft pose",
+      themeColor: "#b08aff"
+    }
+  ];
+
+  function getGalleryImage(id) {
+    return GALLERY_IMAGES.find(img => img.id === id) || null;
+  }
+
+  function getAllGalleryImages() {
+    return GALLERY_IMAGES;
+  }
+
+  function escapeHtml(text) {
+    const d = document.createElement('div');
+    d.textContent = text;
+    return d.innerHTML;
+  }
+
+  function renderGallery() {
+    const container = document.getElementById('galleryContainer');
+    if (!container) return;
+
+    container.innerHTML = '';
+    const images = getAllGalleryImages();
+
+    images.forEach(img => {
+      const card = document.createElement('div');
+      card.className = 'gCard reveal';
+
+      const imgWrapper = document.createElement('div');
+      imgWrapper.className = 'gImg';
+
+      const imgEl = document.createElement('img');
+      imgEl.src = img.src;
+      imgEl.alt = img.alt || img.title;
+      imgEl.loading = 'lazy';
+      imgEl.style.width = '100%';
+      imgEl.style.height = '100%';
+      imgEl.style.objectFit = 'cover';
+
+      imgEl.onerror = () => {
+        imgEl.style.display = 'none';
+        imgWrapper.style.background = `radial-gradient(circle at 30% 30%, ${img.themeColor}33, transparent 55%)`;
+      };
+
+      imgWrapper.appendChild(imgEl);
+
+      const textWrapper = document.createElement('div');
+      textWrapper.className = 'gText';
+      textWrapper.innerHTML = `<h3>${escapeHtml(img.title)}</h3><p>${escapeHtml(img.caption)}</p>`;
+
+      card.appendChild(imgWrapper);
+      card.appendChild(textWrapper);
+      container.appendChild(card);
+    });
+
+    // Observe reveal animations
+    document.querySelectorAll('.gCard.reveal').forEach(el => io.observe(el));
+  }
+
+  // Initialize gallery when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', renderGallery);
+  } else {
+    renderGallery();
+  }
+
+  const garden = document.querySelector(".garden");
 const phraseLayer = document.querySelector(".phraseLayer");
 const phraseOverlay = document.querySelector(".phraseStream");
 const flowers = [];
-const MAX_FLOWERS = 70;
-const MIN_FLOWERS = 12;
+const MAX_FLOWERS = 600;
+const MIN_FLOWERS = 250;
 const MAX_PHRASES = 8;
-const dpr = Math.min(window.devicePixelRatio || 1, 2);
+const dpr = Math.min(window.devicePixelRatio || 5, 20);
 let phraseOrder = [];
 let phrasePtr = 0;
 let overlayBusy = false;
 const bloomQueue = [];
-const FLOWER_MARGIN_PCT = 3; // keep flowers away from viewport edges
-const FLOWER_JITTER_PCT = 2; // slight jitter to avoid perfect grid
+const FLOWER_MARGIN_PCT = 0; // keep flowers away from viewport edges
 const LEAF_SCALE = 0.65; // smaller leaves
-const PETAL_BASE_COUNT = 6;
-const PETAL_VARIATION = 2; // allows 6–8 petals for variation
 let diagnosisModal = null;
+
+// ===== Garden Grid Configuration =====
+const GARDEN_GRID = {
+  ROWS: 2,
+  COLUMNS: 100,
+  ROW_POSITIONS: [
+    { depth: 0, bottom: "0%", scale: 1.0 },
+    { depth: 1, bottom: "5%", scale: 0.85 },
+    { depth: 2, bottom: "25%", scale: 1.0 }
+  ],
+  JITTER_TOLERANCE: 0,
+  RESPONSIVE_BREAKPOINTS: {
+    mobile: { COLUMNS: 20, ROWS: 1 },
+    tablet: { COLUMNS: 40, ROWS: 1 },
+    desktop: { COLUMNS: 60, ROWS: 1 }
+  }
+};
+
+function getGridConfig() {
+  const w = window.innerWidth;
+  if (w < 768) return GARDEN_GRID.RESPONSIVE_BREAKPOINTS.mobile;
+  if (w < 1200) return GARDEN_GRID.RESPONSIVE_BREAKPOINTS.tablet;
+  return GARDEN_GRID.RESPONSIVE_BREAKPOINTS.desktop;
+}
+
+// ===== Jasmine Flower Variants =====
+const FLOWER_VARIANTS = {
+  compact: {
+    name: "Compact Jasmine",
+    petalCount: { base: 6, variation: 0 },
+    petalSize: 0.8,
+    centerSize: 0.9,
+    colors: {
+      petal: { r: 255, g: 255, b: 255 },
+      center: { r: 250, g: 250, b: 240 }
+    },
+    stemThickness: 1.0
+  },
+  standard: {
+    name: "Standard Jasmine",
+    petalCount: { base: 6, variation: 1 },
+    petalSize: 1.0,
+    centerSize: 1.0,
+    colors: {
+      petal: { r: 255, g: 255, b: 255 },
+      center: { r: 250, g: 250, b: 240 }
+    },
+    stemThickness: 1.2
+  },
+  open: {
+    name: "Open Bloom",
+    petalCount: { base: 8, variation: 1 },
+    petalSize: 1.2,
+    centerSize: 1.1,
+    colors: {
+      petal: { r: 255, g: 255, b: 255 },
+      center: { r: 250, g: 250, b: 240 }
+    },
+    stemThickness: 1.3
+  },
+  clustered: {
+    name: "Star Jasmine",
+    petalCount: { base: 7, variation: 1 },
+    petalSize: 0.95,
+    centerSize: 0.8,
+    colors: {
+      petal: { r: 255, g: 255, b: 255 },
+      center: { r: 250, g: 250, b: 240 }
+    },
+    stemThickness: 1.1
+  },
+  bell: {
+    name: "Bell Jasmine",
+    petalCount: { base: 6, variation: 0 },
+    petalSize: 1.1,
+    centerSize: 1.2,
+    colors: {
+      petal: { r: 255, g: 255, b: 255 },
+      center: { r: 250, g: 250, b: 240 }
+    },
+    stemThickness: 1.15
+  }
+};
+
+function getRandomVariant() {
+  const keys = Object.keys(FLOWER_VARIANTS);
+  return FLOWER_VARIANTS[keys[Math.floor(Math.random() * keys.length)]];
+}
 
 // ===== Background Music via YouTube (robust loader) =====
 const TRACKS = [
@@ -747,14 +923,19 @@ function animateFlowerToCenter(btn, rect) {
 }
 
 function createFlowerElement() {
+  const variant = getRandomVariant();
+
   const btn = document.createElement("button");
   btn.className = "pflower";
   btn.type = "button";
   btn.setAttribute("aria-label", "Flower: trigger romantic phrase");
 
+  const variantKey = Object.keys(FLOWER_VARIANTS).find(k => FLOWER_VARIANTS[k] === variant);
+  if (variantKey) btn.dataset.variant = variantKey;
+
   const depth = Math.ceil(Math.random() * 3);
-  const size = 38 + Math.random() * 18; // bloom size
-  const stem = 70 + Math.random() * 60; // stem height
+  const size = 50 + Math.random() * 22; // bloom size
+  const stem = 60 + Math.random() * 55; // stem height
   const widthCss = size * 1.9;
   const heightCss = stem + size * 1.6;
 
@@ -779,7 +960,7 @@ function createFlowerElement() {
   const bloomRadius = size * dpr * 0.5;
   const cx = wPx / 2;
   const cy = hPx - stem * dpr;
-  const petals = PETAL_BASE_COUNT + Math.floor(Math.random() * (PETAL_VARIATION + 1));
+  const petals = variant.petalCount.base + Math.floor(Math.random() * (variant.petalCount.variation + 1));
   const lightDir = { x: -0.3, y: -0.9 };
 
   function drawPixel(px, py, color) {
@@ -810,7 +991,7 @@ function createFlowerElement() {
           const t = (ny - stemTop) / (stem + 1);
           const sway = Math.sin(theta + ny * 0.03) * 1.5;
           const distStem = Math.abs(dx - sway);
-          if (distStem < 2.6) {
+          if (distStem < 2.6 * variant.stemThickness) {
             const leafBand = Math.abs((ny % 24) - 12) < 6;
             const baseG = 180 + hash2d(x, y) * 50;
             r = 40; g = baseG; b = 130;
@@ -842,7 +1023,7 @@ function createFlowerElement() {
         }
 
         // Petals (super simple rose/superformula inspired)
-        const petalRadius = bloomRadius * (0.74 + 0.2 * Math.cos(petals * theta));
+        const petalRadius = bloomRadius * (0.74 + 0.2 * Math.cos(petals * theta)) * variant.petalSize;
         const inner = len < petalRadius && ny < cy / dpr + bloomRadius * 0.95;
         if (inner) {
           const edge = petalRadius - len;
@@ -851,20 +1032,21 @@ function createFlowerElement() {
           const centerGlow = Math.max(0, 1 - len / (bloomRadius * 0.9));
           const light = Math.max(0, (dx / bloomRadius) * lightDir.x + (dy / bloomRadius) * lightDir.y);
           const grain = hash2d(x, y);
-          const tint = 228 + rim * 18 + centerGlow * 12;
-          r = tint + light * 26 + grain * 6;
-          g = tint + light * 18 + centerGlow * 8;
-          b = 218 + rim * 12 + light * 16;
+          const pc = variant.colors.petal;
+          r = Math.round(pc.r * 0.8 + light * 26 + grain * 6 + rim * 6 + centerGlow * 8);
+          g = Math.round(pc.g * 0.8 + light * 18 + centerGlow * 8 + rim * 4);
+          b = Math.round(pc.b * 0.8 + rim * 12 + light * 16);
           a = 185 + rim * 55 + centerGlow * 40;
         }
 
         // Center
-        const centerR = bloomRadius * 0.25;
+        const centerR = bloomRadius * 0.25 * variant.centerSize;
         if (len < centerR) {
           const grain = hash2d(x, y);
-          r = 240 + grain * 10;
-          g = 206 + grain * 40;
-          b = 120 + grain * 20;
+          const cc = variant.colors.center;
+          r = Math.round(cc.r + grain * 10);
+          g = Math.round(cc.g + grain * 40);
+          b = Math.round(cc.b + grain * 20);
           a = 255;
         }
 
@@ -957,26 +1139,43 @@ function attachFlowerInteraction(btn) {
 
 function ensureFlowers() {
   if (!garden) return;
+  const config = getGridConfig();
+  const maxSlots = config.COLUMNS * config.ROWS;
   const progress = (window.scrollY + window.innerHeight * 0.8) / document.documentElement.scrollHeight;
-  const target = Math.min(MAX_FLOWERS, Math.max(MIN_FLOWERS, Math.round(progress * MAX_FLOWERS)));
+  const target = Math.min(maxSlots, Math.min(MAX_FLOWERS, Math.max(MIN_FLOWERS, Math.round(progress * MAX_FLOWERS))));
+
   while (flowers.length < target) {
     const f = createFlowerElement();
     attachFlowerInteraction(f);
     garden.appendChild(f);
     flowers.push(f);
   }
+  while (flowers.length > target) {
+    const f = flowers.pop();
+    f?.remove();
+  }
   layoutFlowers();
 }
 
 function layoutFlowers() {
   if (!flowers.length) return;
-  const total = flowers.length;
-  const span = 100 - FLOWER_MARGIN_PCT * 2;
+  const config = getGridConfig();
+  const columns = config.COLUMNS;
+  const totalFlowers = flowers.length;
+
   flowers.forEach((f, i) => {
-    const base = FLOWER_MARGIN_PCT + (span * (i + 0.5)) / total;
-    const jitter = (Math.random() * 2 - 1) * FLOWER_JITTER_PCT;
-    const pos = Math.min(100 - FLOWER_MARGIN_PCT, Math.max(FLOWER_MARGIN_PCT, base + jitter));
-    f.style.left = `${pos}%`;
+    const col = i % columns;
+    const spacing = 100 / columns;
+    const finalLeft = spacing * col + spacing / 2;
+
+    const rowConfig = GARDEN_GRID.ROW_POSITIONS[0];
+
+    f.style.setProperty("--left", `${finalLeft}%`);
+    f.style.setProperty("--bottom", rowConfig.bottom);
+    f.style.setProperty("--scale", rowConfig.scale);
+    f.style.setProperty("--z-index", `100`);
+    f.dataset.gridRow = "0";
+    f.dataset.gridCol = String(col);
   });
 }
 
@@ -1084,7 +1283,9 @@ const scenarios = [
           { text: "Sit nearby and stay gentle.", feedback: "Comfort doesn't need sound.", isOptimal: true },
           { text: "Check in once then wait.", feedback: "Noted the silence.", isOptimal: false },
           { text: "Lead with jokes.", feedback: "Timing feels off.", isOptimal: false },
-          { text: "Ignore it.", feedback: "Silence just stretched.", isOptimal: false }
+          { text: "Ignore it.", feedback: "Silence just stretched.", isOptimal: false },
+          { text: "Ask about their day in detail.", feedback: "Good intention, but maybe too much.", isOptimal: false },
+          { text: "Send them your favorite song.", feedback: "Thoughtful but indirect.", isOptimal: false }
         ]
       },
       {
@@ -1093,7 +1294,9 @@ const scenarios = [
           { text: "Let it wander.", feedback: "Best talks have no map.", isOptimal: true },
           { text: "Keep it light only.", feedback: "Safe, but shallow.", isOptimal: false },
           { text: "Switch topics quickly.", feedback: "Missed the spark.", isOptimal: false },
-          { text: "End early.", feedback: "Night had more to say.", isOptimal: false }
+          { text: "End early.", feedback: "Night had more to say.", isOptimal: false },
+          { text: "Guide it back to serious topics.", feedback: "Forced direction.", isOptimal: false },
+          { text: "Share a deep secret first.", feedback: "Sweet, but maybe too fast.", isOptimal: false }
         ]
       },
       {
@@ -1102,7 +1305,9 @@ const scenarios = [
           { text: "Listen without fixing.", feedback: "Staying present works.", isOptimal: true },
           { text: "Offer solutions fast.", feedback: "Helpful but rushed.", isOptimal: false },
           { text: "Compare with your own story.", feedback: "Center shifted away.", isOptimal: false },
-          { text: "Downplay it.", feedback: "Door closed.", isOptimal: false }
+          { text: "Downplay it.", feedback: "Door closed.", isOptimal: false },
+          { text: "Validate every feeling they share.", feedback: "Supportive, slight overcompensation.", isOptimal: false },
+          { text: "Ask clarifying questions.", feedback: "Helpful but analytical.", isOptimal: false }
         ]
       },
       {
@@ -1111,7 +1316,9 @@ const scenarios = [
           { text: "Shared language.", feedback: "A tiny world built together.", isOptimal: true },
           { text: "Old funny memories.", feedback: "Nice but surface.", isOptimal: false },
           { text: "Silly distractions.", feedback: "Missed the depth.", isOptimal: false },
-          { text: "Pointless.", feedback: "Magic lost.", isOptimal: false }
+          { text: "Pointless.", feedback: "Magic lost.", isOptimal: false },
+          { text: "Evidence of compatibility.", feedback: "True, but clinical.", isOptimal: false },
+          { text: "Just entertainment.", feedback: "Undervalued the bond.", isOptimal: false }
         ]
       },
       {
@@ -1120,7 +1327,9 @@ const scenarios = [
           { text: "Peaceful.", feedback: "Trust feels easy.", isOptimal: true },
           { text: "Slightly awkward.", feedback: "You're close, not there yet.", isOptimal: false },
           { text: "Boring.", feedback: "Magic missed.", isOptimal: false },
-          { text: "Unacceptable.", feedback: "Space got noisy.", isOptimal: false }
+          { text: "Unacceptable.", feedback: "Space got noisy.", isOptimal: false },
+          { text: "Like I should fill it.", feedback: "Unnecessary pressure.", isOptimal: false },
+          { text: "Rare but nice.", feedback: "Getting warmer.", isOptimal: false }
         ]
       },
       {
@@ -1129,7 +1338,9 @@ const scenarios = [
           { text: "Encouraged.", feedback: "Authenticity unlocked.", isOptimal: true },
           { text: "Sometimes okay.", feedback: "Half-open door.", isOptimal: false },
           { text: "Embarrassing.", feedback: "Walls up.", isOptimal: false },
-          { text: "Never.", feedback: "Mask stays on.", isOptimal: false }
+          { text: "Never.", feedback: "Mask stays on.", isOptimal: false },
+          { text: "Reserved for private.", feedback: "Guarded still.", isOptimal: false },
+          { text: "A sign of trust.", feedback: "Close, but not celebration.", isOptimal: false }
         ]
       },
       {
@@ -1138,7 +1349,9 @@ const scenarios = [
           { text: "Home.", feedback: "Warm choice.", isOptimal: true },
           { text: "Fun only.", feedback: "Nice, incomplete.", isOptimal: false },
           { text: "Casual.", feedback: "Surface level.", isOptimal: false },
-          { text: "Replaceable.", feedback: "Signal fading.", isOptimal: false }
+          { text: "Replaceable.", feedback: "Signal fading.", isOptimal: false },
+          { text: "A good friendship.", feedback: "Safe label, missing depth.", isOptimal: false },
+          { text: "Still exploring.", feedback: "Hesitant.", isOptimal: false }
         ]
       }
     ]
@@ -1413,6 +1626,7 @@ const choiceEls = {
   options: document.getElementById("gameOptions"),
   feedback: document.getElementById("gameFeedback"),
   next: document.getElementById("nextStep"),
+  reconsider: document.getElementById("reconsiderBtn"),
   progressBar: document.getElementById("gameProgressBar"),
   progressText: document.getElementById("gameProgressText"),
   summary: document.getElementById("gameSummary"),
@@ -1463,46 +1677,42 @@ function seedBurst(container) {
   }
 }
 
-function createMomentLayer(phrase) {
+function createMomentLayer(phrase, score = 0, maxScore = 7) {
   const layer = document.createElement("div");
   layer.className = "momentLayer";
+  
+  // Create base HTML structure
   layer.innerHTML = `
     <div class="momentDim"></div>
     <div class="momentCenter">
       <div class="momentGlow"></div>
-      <div class="rose3d">
-        <div class="roseStage">
-          <div class="stem3d"></div>
-          <div class="leaf3d left"></div>
-          <div class="leaf3d right"></div>
-          <div class="bloom3d">
-            ${Array.from({ length: 18 }).map((_, i) => {
-              const rot = i * (360 / 18);
-              const tilt = 10 + (i % 3) * 3;
-              const depth = 18 + i * 1.1;
-              const lift = -i * 1.2;
-              const scale = 1 - i * 0.015;
-              const yaw = i % 2 === 0 ? -5 : 5; // alternate slight yaw per petal for depth
-              return `<div class="petal3d" style="--i:${i};--rot:${rot}deg;--tilt:${tilt}deg;--depth:${depth}px;--lift:${lift}px;--scale:${scale};--yaw:${yaw}deg;"></div>`;
-            }).join("")}
-          </div>
-        </div>
-      </div>
+      <div class="momentRoseContainer"></div>
       <div class="momentText">${escapeHtml(phrase)}</div>
       <div class="momentParticles"></div>
       <div class="momentBurst"></div>
     </div>
   `;
+  
+  // Get rose variant based on score
+  const variant = getRoseVariant(score, maxScore);
+  console.log(`Creating ${variant.name} rose (${score}/${maxScore} = ${((score/maxScore)*100).toFixed(1)}%)`);
+  
+  // Create and append SVG variant rose
+  const roseContainer = layer.querySelector(".momentRoseContainer");
+  const roseSvg = createRoseSvgVariant(variant);
+  roseSvg.classList.add("momentRose");
+  roseContainer.appendChild(roseSvg);
+  
   seedParticles(layer.querySelector(".momentParticles"));
   seedBurst(layer.querySelector(".momentBurst"));
   return layer;
 }
 
-function showMoment(phrase) {
+function showMoment(phrase, score = 0, maxScore = 7) {
   if (momentActive) return;
   hideMoment();
   momentActive = true;
-  momentEl = createMomentLayer(phrase);
+  momentEl = createMomentLayer(phrase, score, maxScore);
   document.body.appendChild(momentEl);
   document.body.classList.add("moment-active");
   if (typeof isMuted === "function" && typeof setMuted === "function") {
@@ -1586,7 +1796,65 @@ function makePetalPath(cx, cy, a, k, rotRad, squishX, squishY) {
   return d;
 }
 
+/**
+ * Determine rose variant based on score percentage
+ * 95%+ → Platinum (9 petals, icy cool, max glow)
+ * 85-94% → Gold (8 petals, warm tones)
+ * 70-84% → Silver (7 petals, cool tones)
+ * <70% → Classic (5 petals, soft pink)
+ */
+function getRoseVariant(score, maxScore = 7) {
+  const percent = (score / maxScore) * 100;
+  if (percent >= 95) {
+    return {
+      name: "platinum",
+      petalCount: 9,
+      petalGradient: "petalG_platinum",
+      stemColor: "#c0c0c0",
+      leafColor: "#a9a9a9",
+      bloomGlow: 2.5,
+      bloomFilter: "platinumGlow"
+    };
+  } else if (percent >= 85) {
+    return {
+      name: "gold",
+      petalCount: 8,
+      petalGradient: "petalG_gold",
+      stemColor: "#8b6f47",
+      leafColor: "#9d7e2e",
+      bloomGlow: 2,
+      bloomFilter: "goldGlow"
+    };
+  } else if (percent >= 70) {
+    return {
+      name: "silver",
+      petalCount: 7,
+      petalGradient: "petalG_silver",
+      stemColor: "#5a7c8a",
+      leafColor: "#6b8c9c",
+      bloomGlow: 1.5,
+      bloomFilter: "silverGlow"
+    };
+  } else {
+    return {
+      name: "classic",
+      petalCount: 5,
+      petalGradient: "petalG",
+      stemColor: "#3a9b46",
+      leafColor: "#57c66a",
+      bloomGlow: 1,
+      bloomFilter: "soft"
+    };
+  }
+}
+
 function createRoseSvg() {
+  // Default variant (classic pink rose)
+  const variant = getRoseVariant(0);
+  return createRoseSvgVariant(variant);
+}
+
+function createRoseSvgVariant(variant) {
   const ns = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(ns, "svg");
   svg.setAttribute("class", "roseSvg");
@@ -1610,6 +1878,27 @@ function createRoseSvg() {
       <stop offset="75%" stop-color="#c2185b"/>
       <stop offset="100%" stop-color="#7b103d"/>
     </radialGradient>
+    <!-- Platinum rose gradient (icy cool, high saturation) -->
+    <radialGradient id="petalG_platinum" cx="30%" cy="25%" r="85%">
+      <stop offset="0%" stop-color="#f0f8ff" stop-opacity="0.9"/>
+      <stop offset="35%" stop-color="#e0f4ff"/>
+      <stop offset="75%" stop-color="#a8d8ff"/>
+      <stop offset="100%" stop-color="#4fa3ff"/>
+    </radialGradient>
+    <!-- Gold rose gradient (warm, luxurious) -->
+    <radialGradient id="petalG_gold" cx="30%" cy="25%" r="85%">
+      <stop offset="0%" stop-color="#fff8e1" stop-opacity="0.9"/>
+      <stop offset="35%" stop-color="#ffe68d"/>
+      <stop offset="75%" stop-color="#ffc107"/>
+      <stop offset="100%" stop-color="#d4871f"/>
+    </radialGradient>
+    <!-- Silver rose gradient (cool, elegant) -->
+    <radialGradient id="petalG_silver" cx="30%" cy="25%" r="85%">
+      <stop offset="0%" stop-color="#f5f5f5" stop-opacity="0.9"/>
+      <stop offset="35%" stop-color="#e8e8e8"/>
+      <stop offset="75%" stop-color="#c0c0c0"/>
+      <stop offset="100%" stop-color="#808080"/>
+    </radialGradient>
     <filter id="soft" x="-30%" y="-30%" width="160%" height="160%">
       <feGaussianBlur stdDeviation="0.8" result="b"/>
       <feColorMatrix type="matrix" values="
@@ -1622,8 +1911,38 @@ function createRoseSvg() {
         <feMergeNode in="SourceGraphic"/>
       </feMerge>
     </filter>
+    <!-- Enhanced glow for platinum -->
+    <filter id="platinumGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.5" result="b"/>
+      <feColorMatrix type="saturate" values="1.3"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Enhanced glow for gold -->
+    <filter id="goldGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.2" result="b"/>
+      <feColorMatrix type="saturate" values="1.2"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <!-- Enhanced glow for silver -->
+    <filter id="silverGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.0" result="b"/>
+      <feMerge>
+        <feMergeNode in="b"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
   `;
   svg.appendChild(defs);
+
+  // Use variant-specific gradient
+  const petalGradient = variant.petalGradient || "petalG";
+  const filterToUse = variant.bloomFilter || "soft";
 
   // Stem (drawn)
   const stem = document.createElementNS(ns, "path");
@@ -1633,7 +1952,7 @@ function createRoseSvg() {
   stem.setAttribute("stroke", "url(#stemG)");
   stem.setAttribute("stroke-width", "8");
   stem.setAttribute("stroke-linecap", "round");
-  stem.setAttribute("filter", "url(#soft)");
+  stem.setAttribute("filter", `url(#${filterToUse})`);
   svg.appendChild(stem);
 
   // Leaves group
@@ -1641,32 +1960,31 @@ function createRoseSvg() {
   leafGroup.setAttribute("class", "leafGroup");
   leafGroup.innerHTML = `
     <path d="M 210 355 C 175 350 155 330 145 305 C 165 305 190 312 210 330 C 220 338 225 347 210 355 Z"
-      fill="url(#leafG)" filter="url(#soft)" opacity="0.95"/>
+      fill="url(#leafG)" filter="url(#${filterToUse})" opacity="0.95"/>
     <path d="M 214 320 C 250 315 275 295 290 270 C 268 268 240 278 220 296 C 210 305 204 315 214 320 Z"
-      fill="url(#leafG)" filter="url(#soft)" opacity="0.95"/>
+      fill="url(#leafG)" filter="url(#${filterToUse})" opacity="0.95"/>
   `;
   svg.appendChild(leafGroup);
 
-  // Petals (math-generated)
+  // Petals (math-generated) - uniform size and evenly spaced
   const centerX = 210;
-  const centerY = 155;
-  const petalCount = 9;
+  const centerY = 150;
+  const petalCount = variant.petalCount || 5;
   for (let i = 0; i < petalCount; i++) {
     const p = document.createElementNS(ns, "path");
     p.setAttribute("class", "petal");
     p.dataset.i = String(i);
 
-    // Vary petal parameters for realism
-    const a = 92 - i * 6;
-    const k = 2 + (i % 3) * 0.25;
-    const rot = (i * (Math.PI * 2)) / petalCount + (i % 2 ? 0.12 : -0.08);
-    const sx =     1.0 - i * 0.03;
-    const sy = 1.12 - i * 0.02;
+    // Uniform petals for organized layout
+    const a = 24;
+    const k = 2;
+    const rot = (i * (Math.PI * 2)) / petalCount;
+    const sx = 0.85;
+    const sy = 0.85;
     const d = makePetalPath(centerX, centerY, a, k, rot, sx, sy);
     p.setAttribute("d", d);
-    p.setAttribute("fill", "url(#petalG)");
-    p.setAttribute("filter", "url(#soft)");
-    p.style.setProperty("--r", `${(i - 4) * 10}deg`);
+    p.setAttribute("fill", `url(#${petalGradient})`);
+    p.setAttribute("filter", `url(#${filterToUse})`);
     p.style.opacity = "0";
     svg.appendChild(p);
   }
@@ -1677,7 +1995,7 @@ function createRoseSvg() {
   bud.setAttribute("cy", "155");
   bud.setAttribute("r", "10");
   bud.setAttribute("fill", "rgba(255,255,255,0.12)");
-  bud.setAttribute("filter", "url(#soft)");
+  bud.setAttribute("filter", `url(#${filterToUse})`);
   svg.appendChild(bud);
 
   return svg;
@@ -2156,9 +2474,10 @@ function clearRoseMoment(targetEl) {
 }
 
 // Main: render cinematic reward under completion area
-function renderRewardScene(container, phrase) {
+function renderRewardScene(container, phrase, score = 0, maxScore = 7) {
   // container: element under the game completion UI
   // phrase: string to show after bloom
+  // score: final score for determining rose variant
   const scene = document.createElement("section");
   scene.className = "rewardScene";
 
@@ -2179,7 +2498,9 @@ function renderRewardScene(container, phrase) {
   burst.className = "burst";
   createBurst(burst);
 
-  const svg = createRoseSvg();
+  // Get rose variant based on score
+  const variant = getRoseVariant(score, maxScore);
+  const svg = createRoseSvgVariant(variant);
 
   const text = document.createElement("div");
   text.className = "rewardText";
@@ -2242,7 +2563,8 @@ function pickRandom(arr) {
 }
 
 function getCompletionMessage(sc, score) {
-  const rewardUnlocked = score >= 6;
+  // Always unlock reward to show variant roses
+  const rewardUnlocked = true;
   if (rewardUnlocked) return { message: sc.reward, rewardUnlocked: true };
 
   const tier = score <= 3 ? sc.completionText?.low : sc.completionText?.mid;
@@ -2256,11 +2578,14 @@ function ensureScenarioState(id) {
       currentStepIndex: 0,
       score: 0,
       selections: new Array(7).fill(null),
+      stepScores: [],
+      reconsiderUsed: new Array(7).fill(false),
       isComplete: false,
       rewardUnlocked: false,
       roseRendered: false,
       rewardRendered: false,
       momentRendered: false,
+      stepStartTime: null,
     };
   }
   return scenarioState[id];
@@ -2292,6 +2617,57 @@ function setFeedback(text) {
   if (choiceEls.feedback) choiceEls.feedback.textContent = text || "";
 }
 
+/**
+ * Shuffles options within a step so correct answer isn't always first.
+ * Preserves the optimal choice but randomizes its position.
+ */
+function shuffleStepOptions(step) {
+  if (!step || !step.options || step.options.length <= 1) return step;
+
+  const options = [...step.options];
+  const optimal = options.find(opt => opt.isOptimal);
+  const wrongAnswers = options.filter(opt => !opt.isOptimal);
+
+  // Fisher-Yates shuffle for wrong answers
+  for (let i = wrongAnswers.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [wrongAnswers[i], wrongAnswers[j]] = [wrongAnswers[j], wrongAnswers[i]];
+  }
+
+  // Randomly insert optimal answer back into list
+  const insertIdx = Math.floor(Math.random() * options.length);
+  const shuffled = [...wrongAnswers];
+  shuffled.splice(insertIdx, 0, optimal);
+
+  return { ...step, options: shuffled };
+}
+
+/**
+ * Calculate step score with weighted bonus
+ * Base: 1 point for optimal, 0.25 for close answers
+ */
+function calculateStepScore(option, stepDuration) {
+  let score = 0;
+
+  if (option.isOptimal) {
+    score += 1;
+  } else if (option.isClose) {
+    // Explicit partial credit marking
+    score += 0.25;
+  } else {
+    // Fallback: check feedback text for "close" indicators
+    const feedback = (option.feedback || "").toLowerCase();
+    if (feedback.includes("close") || feedback.includes("almost") || 
+        feedback.includes("noted") || feedback.includes("warmer") ||
+        feedback.includes("supportive") || feedback.includes("thoughtful") ||
+        feedback.includes("good intention") || feedback.includes("helpful")) {
+      score += 0.25;
+    }
+  }
+
+  return Math.round(score * 100) / 100;
+}
+
 function updateStatus() {
   const sc = getActiveScenario();
   const state = ensureScenarioState(sc.id);
@@ -2303,8 +2679,14 @@ function updateStatus() {
 function renderStep() {
   const sc = getActiveScenario();
   const state = ensureScenarioState(sc.id);
-  const step = sc.steps[state.currentStepIndex];
-  if (!step) return;
+  const originalStep = sc.steps[state.currentStepIndex];
+  if (!originalStep) return;
+
+  // Shuffle options for this playthrough
+  const step = shuffleStepOptions(originalStep);
+  
+  // START TIMER for this step
+  state.stepStartTime = Date.now();
 
   if (choiceEls.prompt) choiceEls.prompt.textContent = step.prompt;
   setFeedback("");
@@ -2325,7 +2707,7 @@ function renderStep() {
       btn.className = "choiceOption";
       btn.textContent = opt.text;
       if (state.selections[state.currentStepIndex] !== null) btn.disabled = true;
-      btn.addEventListener("click", () => handleOptionSelect(idx));
+      btn.addEventListener("click", () => handleOptionSelect(idx, step.options));
       choiceEls.options.appendChild(btn);
     });
   }
@@ -2342,16 +2724,33 @@ function renderStep() {
   updateStatus();
 }
 
-function handleOptionSelect(optionIndex) {
+function handleOptionSelect(optionIndex, shuffledOptions) {
   const sc = getActiveScenario();
   const state = ensureScenarioState(sc.id);
   if (state.isComplete) return;
   if (state.selections[state.currentStepIndex] !== null) return;
 
-  const step = sc.steps[state.currentStepIndex];
-  const opt = step.options[optionIndex];
+  const opt = shuffledOptions[optionIndex];
   state.selections[state.currentStepIndex] = optionIndex;
-  if (opt.isOptimal) state.score += 1;
+  
+  // Calculate step score with weighting
+  const stepDuration = state.stepStartTime ? (Date.now() - state.stepStartTime) : 12000;
+  const stepScore = calculateStepScore(opt, stepDuration);
+  state.score += stepScore;
+
+  // Store numeric score for debugging
+  if (!state.stepScores) state.stepScores = [];
+  state.stepScores.push({
+    step: state.currentStepIndex,
+    score: stepScore,
+    option: opt.text.substring(0, 30) + "...",
+    isOptimal: opt.isOptimal,
+    feedback: opt.feedback
+  });
+
+  // Console log for debugging
+  console.log("Step Score:", stepScore, "| Total:", state.score, "| Option:", opt.text);
+  console.log("Full breakdown:", state.stepScores);
 
   if (choiceEls.options) {
     choiceEls.options.querySelectorAll(".choiceOption").forEach((btn, idx) => {
@@ -2368,7 +2767,47 @@ function handleOptionSelect(optionIndex) {
     choiceEls.next.disabled = false;
     choiceEls.next.textContent = state.currentStepIndex === sc.steps.length - 1 ? "Finish" : "Continue";
   }
+
+  // Show reconsider button if not already used on this step
+  if (choiceEls.reconsider) {
+    if (state.reconsiderUsed[state.currentStepIndex]) {
+      choiceEls.reconsider.style.display = "none";
+    } else {
+      choiceEls.reconsider.style.display = "inline-block";
+    }
+  }
+
   updateStatus();
+}
+
+/**
+ * Allow user to change their answer once per step
+ */
+function handleReconsider() {
+  const sc = getActiveScenario();
+  const state = ensureScenarioState(sc.id);
+  if (state.isComplete) return;
+  
+  const stepIdx = state.currentStepIndex;
+  
+  // Mark reconsider as used for this step
+  state.reconsiderUsed[stepIdx] = true;
+  
+  // Remove the score we added for this step
+  if (state.stepScores.length > 0) {
+    const lastScore = state.stepScores[state.stepScores.length - 1];
+    if (lastScore.step === stepIdx) {
+      state.score -= lastScore.score;
+      state.stepScores.pop();
+      console.log("Reconsider: Reverted score. New total:", state.score);
+    }
+  }
+  
+  // Clear selection for this step
+  state.selections[stepIdx] = null;
+  
+  // Re-render the step with fresh options
+  renderStep();
 }
 
 function goNextStep() {
@@ -2389,11 +2828,15 @@ function finalizeScenario() {
   const state = ensureScenarioState(sc.id);
   state.isComplete = true;
 
+  console.log("=== SCENARIO COMPLETE ===");
+  console.log("Final Score:", state.score, "/", sc.steps.length);
+  console.log("Step-by-step breakdown:", state.stepScores);
+
   const result = getCompletionMessage(sc, state.score);
   state.rewardUnlocked = result.rewardUnlocked;
 
   if (state.rewardUnlocked && !state.momentRendered) {
-    showMoment(sc.reward);
+    showMoment(sc.reward, state.score, sc.steps.length);
     state.momentRendered = true;
   }
 
@@ -2413,11 +2856,14 @@ function resetScenario(id = activeScenarioId, rerenderButtons = true) {
   scenarioState[id].currentStepIndex = 0;
   scenarioState[id].score = 0;
   scenarioState[id].selections = new Array(7).fill(null);
+  scenarioState[id].stepScores = [];
+  scenarioState[id].reconsiderUsed = new Array(7).fill(false);
   scenarioState[id].isComplete = false;
   scenarioState[id].rewardUnlocked = false;
   scenarioState[id].roseRendered = false;
   scenarioState[id].rewardRendered = false;
   scenarioState[id].momentRendered = false;
+  scenarioState[id].stepStartTime = null;
   hideMoment();
   closeDiagnosisModal();
   if (choiceEls.wrap) {
@@ -2434,6 +2880,7 @@ function initChoiceGame() {
   renderScenarioButtons();
   resetScenario(activeScenarioId, false);
   choiceEls.next?.addEventListener("click", goNextStep);
+  choiceEls.reconsider?.addEventListener("click", handleReconsider);
   choiceEls.restart?.addEventListener("click", () => resetScenario(activeScenarioId));
 }
 
